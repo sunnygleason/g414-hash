@@ -44,6 +44,10 @@ public class MurmurHash_v9ABA implements LongHash {
 	/** @see LongHash#getLongHashCodes(String, int) */
 	@Override
 	public long[] getLongHashCodes(String object, int k) {
+		if (k < 1) {
+			throw new IllegalArgumentException("k must be >= 1");
+		}
+
 		long[] hashCodes = new long[k];
 		byte[] representation = object.getBytes();
 
