@@ -37,12 +37,12 @@ public abstract class BloomFilterTestBase {
 	public BloomTestConfig[] fastConfigs = new BloomTestConfig[] {
 			new BloomTestConfig(10000, 500, 8, 1),
 			new BloomTestConfig(10000, 1000, 8, 1),
-			new BloomTestConfig(10000, 5000, 8, 1),
-			new BloomTestConfig(1000000, 100000, 8, 1),
-			new BloomTestConfig(1000000, 100000, 16, 1),
-			new BloomTestConfig(1000000, 100000, 24, 1), };
+			new BloomTestConfig(10000, 5000, 8, 1), };
 
 	public BloomTestConfig[] slowConfigs = new BloomTestConfig[] {
+			new BloomTestConfig(1000000, 100000, 8, 1),
+			new BloomTestConfig(1000000, 100000, 16, 1),
+			new BloomTestConfig(1000000, 100000, 24, 1),
 			new BloomTestConfig(10000000, 100000, 16, 1),
 			new BloomTestConfig(10000000, 100000, 24, 1),
 			new BloomTestConfig(1000000000, 1000000, 24, 1),
@@ -74,7 +74,7 @@ public abstract class BloomFilterTestBase {
 			LongHash hash = this.getHash();
 
 			System.out.println("bloom test randomized config ("
-					+ hash.getClass() + ") : " + config);
+					+ hash.getName() + ") : " + config);
 
 			BloomFilter filter = new BloomFilter(hash, config.maxSize,
 					config.bitsPerItem);
@@ -113,7 +113,7 @@ public abstract class BloomFilterTestBase {
 			LongHash hash = this.getHash();
 
 			System.out.println("bloom test deterministic config ("
-					+ hash.getClass() + ") : " + config);
+					+ hash.getName() + ") : " + config);
 
 			BloomFilter filter = new BloomFilter(hash, config.maxSize,
 					config.bitsPerItem);
