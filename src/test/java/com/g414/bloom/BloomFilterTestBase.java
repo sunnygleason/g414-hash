@@ -24,6 +24,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.g414.hash.LongHash;
+import com.g414.hash.bloom.BloomFilter;
 
 /**
  * Base class for Bloom Filter test implementations; runs a standard test to

@@ -15,7 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.g414.hash;
+package com.g414.hash.impl;
+
+import com.g414.hash.LongHash;
 
 /**
  * <pre>

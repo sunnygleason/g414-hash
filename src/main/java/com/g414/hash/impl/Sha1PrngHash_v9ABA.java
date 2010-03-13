@@ -15,12 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.g414.hash;
+package com.g414.hash.impl;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Random;
+
+import com.g414.hash.LongHash;
+import com.g414.hash.LongHashMethods;
 
 /**
  * LongHash implementation that uses SHA1 Message Digest and PRNG to generate
