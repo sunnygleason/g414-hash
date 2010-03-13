@@ -20,7 +20,8 @@ package com.g414.bloom;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
-import junit.framework.TestCase;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import com.g414.hash.LongHash;
 
@@ -30,28 +31,54 @@ import com.g414.hash.LongHash;
  * only a spot check - this should be augmented by more rigorous tests with more
  * expansive domain sizes.
  */
-public abstract class BloomFilterTestBase extends TestCase {
+public abstract class BloomFilterTestBase {
 	public abstract LongHash getHash();
 
-	public BloomTestConfig[] configs = new BloomTestConfig[] {
+	public BloomTestConfig[] fastConfigs = new BloomTestConfig[] {
 			new BloomTestConfig(10000, 500, 8, 1),
 			new BloomTestConfig(10000, 1000, 8, 1),
 			new BloomTestConfig(10000, 5000, 8, 1),
 			new BloomTestConfig(1000000, 100000, 8, 1),
 			new BloomTestConfig(1000000, 100000, 16, 1),
-			new BloomTestConfig(1000000, 100000, 24, 1),
+			new BloomTestConfig(1000000, 100000, 24, 1), };
+
+	public BloomTestConfig[] slowConfigs = new BloomTestConfig[] {
 			new BloomTestConfig(10000000, 100000, 16, 1),
 			new BloomTestConfig(10000000, 100000, 24, 1),
-	// new BloomTestConfig(1000000000, 1000000, 24, 1), // SLOW!
-	// new BloomTestConfig(1000000000, 1000000, 32, 1), // SLOW!
-	};
+			new BloomTestConfig(1000000000, 1000000, 24, 1),
+			new BloomTestConfig(1000000000, 1000000, 32, 1), };
 
-	public void testBloomFilter_Randomized() throws NoSuchAlgorithmException {
-		for (BloomTestConfig config : this.configs) {
-			System.out.println("RANDOMIZED: " + config);
+	@Test
+	public void testBloom_random_fast() throws Exception {
+		doTestBloomFilter_Randomized(this.fastConfigs);
+	}
 
-			BloomFilter filter = new BloomFilter(this.getHash(),
-					config.maxSize, config.bitsPerItem);
+	@Test(groups = "slow")
+	public void testBloom_random_slow() throws Exception {
+		doTestBloomFilter_Randomized(this.slowConfigs);
+	}
+
+	@Test
+	public void testBloom_deterministic_fast() throws Exception {
+		doTestBloomFilter_Deterministic(this.fastConfigs);
+	}
+
+	@Test(groups = "slow")
+	public void testBloom_deterministic_slow() throws Exception {
+		doTestBloomFilter_Deterministic(this.slowConfigs);
+	}
+
+	public void doTestBloomFilter_Randomized(BloomTestConfig[] configs)
+			throws NoSuchAlgorithmException {
+		for (BloomTestConfig config : configs) {
+			LongHash hash = this.getHash();
+
+			System.out.println("bloom test randomized config ("
+					+ hash.getClass() + ") : " + config);
+
+			BloomFilter filter = new BloomFilter(hash, config.maxSize,
+					config.bitsPerItem);
+
 			SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
 			random.setSeed(config.seed);
 
@@ -71,19 +98,25 @@ public abstract class BloomFilterTestBase extends TestCase {
 			int projectedErrors = (int) Math.ceil(config.MAX_DOMAIN
 					* Math.pow(0.62, config.bitsPerItem));
 
-			System.out.println(falsePos + "  " + projectedErrors);
+			System.out.println("bloom test randomized result : " + falsePos
+					+ "  " + projectedErrors);
 
-			assertTrue(falsePos * 0.95 <= 1 + Math.ceil(config.MAX_DOMAIN
-					* Math.pow(0.62, config.bitsPerItem)));
+			Assert.assertTrue(falsePos * 0.95 <= 1 + Math
+					.ceil(config.MAX_DOMAIN
+							* Math.pow(0.62, config.bitsPerItem)));
 		}
 	}
 
-	public void testBloomFilter_Deterministic() throws NoSuchAlgorithmException {
-		for (BloomTestConfig config : this.configs) {
-			System.out.println("DETERMINISTIC: " + config);
+	public void doTestBloomFilter_Deterministic(BloomTestConfig[] configs)
+			throws NoSuchAlgorithmException {
+		for (BloomTestConfig config : configs) {
+			LongHash hash = this.getHash();
 
-			BloomFilter filter = new BloomFilter(this.getHash(),
-					config.maxSize, config.bitsPerItem);
+			System.out.println("bloom test deterministic config ("
+					+ hash.getClass() + ") : " + config);
+
+			BloomFilter filter = new BloomFilter(hash, config.maxSize,
+					config.bitsPerItem);
 
 			for (int i = 0; i < config.maxSize; i++) {
 				filter.put("test__" + i);
@@ -101,10 +134,12 @@ public abstract class BloomFilterTestBase extends TestCase {
 			int projectedErrors = (int) Math.ceil(config.MAX_DOMAIN
 					* Math.pow(0.62, config.bitsPerItem));
 
-			System.out.println(falsePos + "  " + projectedErrors);
+			System.out.println("bloom test deterministic result : " + falsePos
+					+ "  " + projectedErrors);
 
-			assertTrue(falsePos * 0.95 <= 1 + Math.ceil(config.MAX_DOMAIN
-					* Math.pow(0.62, config.bitsPerItem)));
+			Assert.assertTrue(falsePos * 0.95 <= 1 + Math
+					.ceil(config.MAX_DOMAIN
+							* Math.pow(0.62, config.bitsPerItem)));
 		}
 	}
 
