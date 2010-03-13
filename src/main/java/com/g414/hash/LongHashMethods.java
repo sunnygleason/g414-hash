@@ -21,17 +21,17 @@ package com.g414.hash;
  * Utility methods for nifty hash implementations.
  */
 public class LongHashMethods {
-	/** take a bunch of random bytes and turn them into a single long */
-	public long condenseBytesIntoLong(byte[] representation) {
-		long seed = 0L;
-		int pos = 0;
+    /** take a bunch of random bytes and turn them into a single long */
+    public long condenseBytesIntoLong(byte[] representation) {
+        long seed = 0L;
+        int pos = 0;
 
-		for (byte b : representation) {
-			long bLong = ((long) b) << (pos * 8);
-			seed ^= bLong;
-			pos = (pos + 1) % 8;
-		}
+        for (byte b : representation) {
+            long bLong = ((long) b) << (pos * 8);
+            seed ^= bLong;
+            pos = (pos + 1) % 8;
+        }
 
-		return seed;
-	}
+        return seed;
+    }
 }

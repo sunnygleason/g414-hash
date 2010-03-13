@@ -31,110 +31,110 @@ import com.g414.hash.LongHash;
  * </p>
  */
 public class MurmurHash_v9ABA implements LongHash {
-	/** @see LongHash#getName() */
-	@Override
-	public String getName() {
-		return this.getClass().getName();
-	}
+    /** @see LongHash#getName() */
+    @Override
+    public String getName() {
+        return this.getClass().getName();
+    }
 
-	/** @see LongHash#getLongHashCode(String) */
-	@Override
-	public long getLongHashCode(String object) {
-		return computeMurmurHash(object.getBytes(), 0L);
-	}
+    /** @see LongHash#getLongHashCode(String) */
+    @Override
+    public long getLongHashCode(String object) {
+        return computeMurmurHash(object.getBytes(), 0L);
+    }
 
-	/** @see LongHash#getLongHashCodes(String, int) */
-	@Override
-	public long[] getLongHashCodes(String object, int k) {
-		if (k < 1) {
-			throw new IllegalArgumentException("k must be >= 1");
-		}
+    /** @see LongHash#getLongHashCodes(String, int) */
+    @Override
+    public long[] getLongHashCodes(String object, int k) {
+        if (k < 1) {
+            throw new IllegalArgumentException("k must be >= 1");
+        }
 
-		long[] hashCodes = new long[k];
-		byte[] representation = object.getBytes();
+        long[] hashCodes = new long[k];
+        byte[] representation = object.getBytes();
 
-		for (int i = 0; i < k; i++) {
-			hashCodes[i] = computeMurmurHash(representation, i);
-		}
+        for (int i = 0; i < k; i++) {
+            hashCodes[i] = computeMurmurHash(representation, i);
+        }
 
-		return hashCodes;
-	}
+        return hashCodes;
+    }
 
-	/**
-	 * Implementation of Murmur Hash, ported from 64-bit version.
-	 * 
-	 * @param data
-	 * @param seed
-	 * @return
-	 */
-	public long computeMurmurHash(byte[] data, long seed) {
-		long m = 0xc6a4a7935bd1e995L;
-		long r = 47;
+    /**
+     * Implementation of Murmur Hash, ported from 64-bit version.
+     * 
+     * @param data
+     * @param seed
+     * @return
+     */
+    public long computeMurmurHash(byte[] data, long seed) {
+        long m = 0xc6a4a7935bd1e995L;
+        long r = 47;
 
-		long h = seed ^ data.length;
+        long h = seed ^ data.length;
 
-		int len = data.length;
-		int len_8 = len >> 3;
+        int len = data.length;
+        int len_8 = len >> 3;
 
-		for (int i = 0; i < len_8; i++) {
-			int i_8 = i << 3;
+        for (int i = 0; i < len_8; i++) {
+            int i_8 = i << 3;
 
-			long k = data[i_8 + 7];
-			k = k << 8;
-			k = k | (data[i_8 + 6] & 0xff);
-			k = k << 8;
-			k = k | (data[i_8 + 5] & 0xff);
-			k = k << 8;
-			k = k | (data[i_8 + 4] & 0xff);
-			k = k << 8;
-			k = k | (data[i_8 + 3] & 0xff);
-			k = k << 8;
-			k = k | (data[i_8 + 2] & 0xff);
-			k = k << 8;
-			k = k | (data[i_8 + 1] & 0xff);
-			k = k << 8;
-			k = k | (data[i_8 + 0] & 0xff);
+            long k = data[i_8 + 7];
+            k = k << 8;
+            k = k | (data[i_8 + 6] & 0xff);
+            k = k << 8;
+            k = k | (data[i_8 + 5] & 0xff);
+            k = k << 8;
+            k = k | (data[i_8 + 4] & 0xff);
+            k = k << 8;
+            k = k | (data[i_8 + 3] & 0xff);
+            k = k << 8;
+            k = k | (data[i_8 + 2] & 0xff);
+            k = k << 8;
+            k = k | (data[i_8 + 1] & 0xff);
+            k = k << 8;
+            k = k | (data[i_8 + 0] & 0xff);
 
-			k *= m;
-			k ^= k >>> r;
-			k *= m;
-			h *= m;
-			h ^= k;
-		}
+            k *= m;
+            k ^= k >>> r;
+            k *= m;
+            h *= m;
+            h ^= k;
+        }
 
-		long len_m = len_8 << 3;
-		long left = len - len_m;
+        long len_m = len_8 << 3;
+        long left = len - len_m;
 
-		if (left != 0) {
-			if (left >= 7) {
-				h ^= (long) data[len - 7] << 48;
-			}
-			if (left >= 6) {
-				h ^= (long) data[len - 6] << 40;
-			}
-			if (left >= 5) {
-				h ^= (long) data[len - 5] << 32;
-			}
-			if (left >= 4) {
-				h ^= (long) data[len - 4] << 24;
-			}
-			if (left >= 3) {
-				h ^= (long) data[len - 3] << 16;
-			}
-			if (left >= 2) {
-				h ^= (long) data[len - 2] << 8;
-			}
-			if (left >= 1) {
-				h ^= (long) data[len - 1];
-			}
+        if (left != 0) {
+            if (left >= 7) {
+                h ^= (long) data[len - 7] << 48;
+            }
+            if (left >= 6) {
+                h ^= (long) data[len - 6] << 40;
+            }
+            if (left >= 5) {
+                h ^= (long) data[len - 5] << 32;
+            }
+            if (left >= 4) {
+                h ^= (long) data[len - 4] << 24;
+            }
+            if (left >= 3) {
+                h ^= (long) data[len - 3] << 16;
+            }
+            if (left >= 2) {
+                h ^= (long) data[len - 2] << 8;
+            }
+            if (left >= 1) {
+                h ^= (long) data[len - 1];
+            }
 
-			h *= m;
-		}
+            h *= m;
+        }
 
-		h ^= h >> r;
-		h *= m;
-		h ^= h >> r;
+        h ^= h >> r;
+        h *= m;
+        h ^= h >> r;
 
-		return h;
-	}
+        return h;
+    }
 }

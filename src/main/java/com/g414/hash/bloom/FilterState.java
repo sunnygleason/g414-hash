@@ -25,64 +25,64 @@ import java.util.BitSet;
  * previously-serialized classes will bust.
  */
 public class FilterState implements Serializable {
-	/** serial version uid */
-	private static final long serialVersionUID = 1000001L;
+    /** serial version uid */
+    private static final long serialVersionUID = 1000001L;
 
-	/** name of hash used to create this filter state */
-	private final String hashName;
+    /** name of hash used to create this filter state */
+    private final String hashName;
 
-	/** BitSet containing bloom state */
-	private final BitSet state;
+    /** BitSet containing bloom state */
+    private final BitSet state;
 
-	/** maxSize of bloom filter */
-	private final int maxSize;
+    /** maxSize of bloom filter */
+    private final int maxSize;
 
-	/** size of bit set */
-	private final int bitSetLength;
+    /** size of bit set */
+    private final int bitSetLength;
 
-	/** number of hash functions per get/put operation */
-	private final int k;
+    /** number of hash functions per get/put operation */
+    private final int k;
 
-	/**
-	 * Construct a new filter state object using the specified hash name,
-	 * bitset, maxSize and k value.
-	 * 
-	 * @param hashName
-	 * @param state
-	 * @param maxSize
-	 * @param k
-	 */
-	public FilterState(String hashName, BitSet state, int maxSize,
-			int bitSetLength, int k) {
-		this.hashName = hashName;
-		this.state = state;
-		this.maxSize = maxSize;
-		this.bitSetLength = bitSetLength;
-		this.k = k;
-	}
+    /**
+     * Construct a new filter state object using the specified hash name,
+     * bitset, maxSize and k value.
+     * 
+     * @param hashName
+     * @param state
+     * @param maxSize
+     * @param k
+     */
+    public FilterState(String hashName, BitSet state, int maxSize,
+            int bitSetLength, int k) {
+        this.hashName = hashName;
+        this.state = state;
+        this.maxSize = maxSize;
+        this.bitSetLength = bitSetLength;
+        this.k = k;
+    }
 
-	/** @return String hash name */
-	public String getHashName() {
-		return hashName;
-	}
+    /** @return String hash name */
+    public String getHashName() {
+        return hashName;
+    }
 
-	/** @return BitSet filter state */
-	public BitSet getState() {
-		return state;
-	}
+    /** @return BitSet filter state */
+    public BitSet getState() {
+        return state;
+    }
 
-	/** @return int max items in filter */
-	public int getMaxSize() {
-		return maxSize;
-	}
+    /** @return int max items in filter */
+    public int getMaxSize() {
+        return maxSize;
+    }
 
-	/** @return length of bit set */
-	public int getBitSetLength() {
-		return bitSetLength;
-	}
+    /** @return length of bit set */
+    public int getBitSetLength() {
+        return bitSetLength;
+    }
 
-	/** @return int k number of hash values used */
-	public int getK() {
-		return k;
-	}
+    /** @return int k number of hash values used */
+    public int getK() {
+        return k;
+    }
 }

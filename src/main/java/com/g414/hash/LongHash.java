@@ -22,12 +22,12 @@ package com.g414.hash;
  * for Bloom Filter and other nifty use cases.
  */
 public interface LongHash {
-	/** returns the String name identifying this hash code implementation */
-	public String getName();
+    /** returns the String name identifying this hash code implementation */
+    public String getName();
 
-	/** returns the order-zero hash code for the given object */
-	public long getLongHashCode(String object);
+    /** returns the order-zero hash code for the given object */
+    public long getLongHashCode(String object);
 
-	/** returns an array of the first k hash codes for the given object */
-	public long[] getLongHashCodes(String object, int k);
+    /** returns an array of the first k hash codes for the given object */
+    public long[] getLongHashCodes(String object, int k);
 }

@@ -21,8 +21,8 @@ import com.g414.hash.LongHash;
 import com.g414.hash.impl.JenkinsHash_v9ABA;
 
 public class JenkinsHash_v9ABA_Test extends BloomFilterTestBase {
-	@Override
-	public LongHash getHash() {
-		return new JenkinsHash_v9ABA();
-	}
+    @Override
+    public LongHash getHash() {
+        return new JenkinsHash_v9ABA();
+    }
 }

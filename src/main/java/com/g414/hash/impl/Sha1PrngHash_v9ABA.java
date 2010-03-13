@@ -30,66 +30,66 @@ import com.g414.hash.LongHashMethods;
  * hash codes. Pretty trusty. Version 2009-11-15T22:00.
  */
 public class Sha1PrngHash_v9ABA implements LongHash {
-	/** HashMethods implementation */
-	private static final LongHashMethods util = new LongHashMethods();
+    /** HashMethods implementation */
+    private static final LongHashMethods util = new LongHashMethods();
 
-	/** @see LongHash#getName() */
-	@Override
-	public String getName() {
-		return this.getClass().getName();
-	}
+    /** @see LongHash#getName() */
+    @Override
+    public String getName() {
+        return this.getClass().getName();
+    }
 
-	/** @see LongHash#getLongHashCode(String) */
-	@Override
-	public long getLongHashCode(String object) {
-		byte[] signature = getDigest(object.getBytes());
-		long seed = util.condenseBytesIntoLong(signature);
+    /** @see LongHash#getLongHashCode(String) */
+    @Override
+    public long getLongHashCode(String object) {
+        byte[] signature = getDigest(object.getBytes());
+        long seed = util.condenseBytesIntoLong(signature);
 
-		return seed;
-	}
+        return seed;
+    }
 
-	/** @see LongHash#getLongHashCodes(String, int) */
-	@Override
-	public long[] getLongHashCodes(String object, int k) {
-		if (k < 1) {
-			throw new IllegalArgumentException("k must be >= 1");
-		}
+    /** @see LongHash#getLongHashCodes(String, int) */
+    @Override
+    public long[] getLongHashCodes(String object, int k) {
+        if (k < 1) {
+            throw new IllegalArgumentException("k must be >= 1");
+        }
 
-		byte[] signature = getDigest(object.getBytes());
-		long seed = util.condenseBytesIntoLong(signature);
+        byte[] signature = getDigest(object.getBytes());
+        long seed = util.condenseBytesIntoLong(signature);
 
-		Random random = getRandom(seed);
+        Random random = getRandom(seed);
 
-		long[] hashCodes = new long[k];
-		hashCodes[0] = seed;
+        long[] hashCodes = new long[k];
+        hashCodes[0] = seed;
 
-		for (int i = 1; i < k; i++) {
-			hashCodes[i] = random.nextLong();
-		}
+        for (int i = 1; i < k; i++) {
+            hashCodes[i] = random.nextLong();
+        }
 
-		return hashCodes;
-	}
+        return hashCodes;
+    }
 
-	/** returns the message digest of the given object bytes */
-	private static byte[] getDigest(byte[] object) {
-		try {
-			MessageDigest digest = MessageDigest.getInstance("sha1");
+    /** returns the message digest of the given object bytes */
+    private static byte[] getDigest(byte[] object) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("sha1");
 
-			return digest.digest(object);
-		} catch (NoSuchAlgorithmException e) {
-			throw new RuntimeException(e);
-		}
-	}
+            return digest.digest(object);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-	/** creates a SecureRandom using the specified seed */
-	private static Random getRandom(long seed) {
-		try {
-			Random random = SecureRandom.getInstance("SHA1PRNG");
-			random.setSeed(seed);
+    /** creates a SecureRandom using the specified seed */
+    private static Random getRandom(long seed) {
+        try {
+            Random random = SecureRandom.getInstance("SHA1PRNG");
+            random.setSeed(seed);
 
-			return random;
-		} catch (NoSuchAlgorithmException e) {
-			throw new RuntimeException(e);
-		}
-	}
+            return random;
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

@@ -21,7 +21,7 @@ package com.g414.hash.bloom;
  * Utility methods for Bloom Filter implementations.
  */
 public class FilterMethods {
-	public int normalizeLong(long code, int size) {
-		return Math.abs((int) ((long) code % (long) size));
-	}
+    public int normalizeLong(long code, int size) {
+        return Math.abs((int) ((long) code % (long) size));
+    }
 }
