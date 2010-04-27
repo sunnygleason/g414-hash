@@ -15,14 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.g414.bloom;
+package com.g414.hash.file.impl;
 
-import com.g414.hash.LongHash;
-import com.g414.hash.impl.Sha1PrngHash_v9ABA;
+/**
+ * Encapsulates a hash pointer: a long hash value and long positional offset.
+ */
+public class LongPointer {
+    /** The hash value of the object */
+    private final long hash;
 
-public class Sha1PrngHash_v9ABA_Test extends BloomFilterTestBase {
-    @Override
-    public LongHash getHash() {
-        return new Sha1PrngHash_v9ABA();
+    /** The offset position in the stream */
+    private final long pos;
+
+    /** Creates a new LongPointer */
+    public LongPointer(long hash, long pos) {
+        this.hash = hash;
+        this.pos = pos;
+    }
+
+    /** get the hash value */
+    public long getHash() {
+        return hash;
+    }
+
+    /** get the position */
+    public long getPos() {
+        return pos;
     }
 }

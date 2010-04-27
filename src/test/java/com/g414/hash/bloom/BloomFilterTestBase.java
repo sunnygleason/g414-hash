@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.g414.bloom;
+package com.g414.hash.bloom;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;

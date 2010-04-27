@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.g414.bloom;
+package com.g414.hash.bloom;
 
 import com.g414.hash.LongHash;
-import com.g414.hash.impl.MurmurHash_v9ABA;
+import com.g414.hash.impl.JenkinsHash_v9ABA;
 
-public class MurmurHash_v9ABA_Test extends BloomFilterTestBase {
+public class JenkinsHash_v9ABA_Test extends BloomFilterTestBase {
     @Override
     public LongHash getHash() {
-        return new MurmurHash_v9ABA();
+        return new JenkinsHash_v9ABA();
     }
 }
