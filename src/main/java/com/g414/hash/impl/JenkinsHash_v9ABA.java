@@ -46,6 +46,11 @@ public class JenkinsHash_v9ABA implements LongHash {
         return computeJenkinsHash(object.getBytes(), 0L);
     }
 
+    @Override
+    public long getLongHashCode(byte[] data) {
+        return computeJenkinsHash(data, 0L);
+    }
+    
     /** @see LongHash#getLongHashCodes(String, int) */
     @Override
     public long[] getLongHashCodes(String object, int k) {

@@ -17,7 +17,7 @@
  */
 package com.g414.hash.file.impl;
 
-import com.g414.hash.impl.MurmurHash_v9ABA;
+import com.g414.hash.impl.MurmurHash_new;
 
 /**
  * Encapsulates calculations related to HashFiles.
@@ -39,7 +39,7 @@ public class Calculations {
     public static final int RADIX_FILE_COUNT = (1 << RADIX_FILE_COUNT_POWER_OF_2);
 
     /** our trusty hash function */
-    private static final MurmurHash_v9ABA hash = new MurmurHash_v9ABA();
+    private static final MurmurHash_new hash = new MurmurHash_new();
 
     /** Computes the hash value of a given byte[] key */
     public static long computeHash(byte[] key) {

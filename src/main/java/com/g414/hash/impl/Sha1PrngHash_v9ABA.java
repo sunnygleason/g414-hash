@@ -43,11 +43,15 @@ public class Sha1PrngHash_v9ABA implements LongHash {
     @Override
     public long getLongHashCode(String object) {
         byte[] signature = getDigest(object.getBytes());
-        long seed = util.condenseBytesIntoLong(signature);
-
-        return seed;
+        return util.condenseBytesIntoLong(signature);
     }
 
+    @Override
+    public long getLongHashCode(byte[] data) {
+        byte[] signature = getDigest(data);
+        return util.condenseBytesIntoLong(signature);
+    }
+    
     /** @see LongHash#getLongHashCodes(String, int) */
     @Override
     public long[] getLongHashCodes(String object, int k) {

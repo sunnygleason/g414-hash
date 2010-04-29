@@ -28,6 +28,8 @@ public interface LongHash {
     /** returns the order-zero hash code for the given object */
     public long getLongHashCode(String object);
 
+    public long getLongHashCode(byte[] data);
+    
     /** returns an array of the first k hash codes for the given object */
     public long[] getLongHashCodes(String object, int k);
 }
