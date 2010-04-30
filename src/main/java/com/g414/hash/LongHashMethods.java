@@ -34,4 +34,56 @@ public class LongHashMethods {
 
         return seed;
     }
+
+    public final static long gatherLongLE(byte[] data, int index)
+    {
+        int i1 = gatherIntLE(data, index);
+        long l2 = gatherIntLE(data, index+4);
+        return uintToLong(i1) | (l2 << 32);
+    }
+
+    public final static long gatherPartialLongLE(byte[] data, int index, int available)
+    {
+        if (available >= 4) {
+            int i = gatherIntLE(data, index);
+            long l = uintToLong(i);
+            available -= 4;
+            if (available == 0) {
+                return l;
+            }
+            int i2 = gatherPartialIntLE(data, index+4, available);
+            l <<= (available << 3);
+            l |= (long) i2;
+            return l;
+        }
+        return (long) gatherPartialIntLE(data, index, available);
+    }
+
+    // Helper method to do unsigned extension of int to long
+    public final static long uintToLong(int i) {
+        long l = (long) i;
+        return (l << 32) >>> 32;
+    }
+    
+    public final static int gatherIntLE(byte[] data, int index)
+    {    
+        int i = data[index] & 0xFF;
+        i |= (data[++index] & 0xFF) << 8;
+        i |= (data[++index] & 0xFF) << 16;
+        i |= (data[++index] << 24);
+        return i;
+    }
+
+    private final static int gatherPartialIntLE(byte[] data, int index, int available)
+    {    
+        int i = data[index] & 0xFF;
+        if (available > 1) {
+            i |= (data[++index] & 0xFF) << 8;
+            if (available > 2) {
+                i |= (data[++index] & 0xFF) << 16;
+            }
+        }
+        return i;
+    }
+
 }

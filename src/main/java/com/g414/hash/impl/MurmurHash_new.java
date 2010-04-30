@@ -19,6 +19,8 @@ package com.g414.hash.impl;
 
 import com.g414.hash.LongHash;
 
+import static com.g414.hash.LongHashMethods.*;
+
 /**
  * MurmurHash implementation suitable for Bloom Filter usage.
  * 
@@ -32,6 +34,7 @@ import com.g414.hash.LongHash;
  */
 public class MurmurHash_new implements LongHash {
     private final static long M = 0xc6a4a7935bd1e995L;
+    private final static int R = 47;
 
     /** @see LongHash#getName() */
     @Override
@@ -75,62 +78,29 @@ public class MurmurHash_new implements LongHash {
      * @return
      */
     public long computeMurmurHash(byte[] data, long seed) {
-        long r = 47;
-        final int len = data.length;
-        long h = seed ^ len;
+        final long m = M;
+        long h = seed ^ data.length;
         int i = 0;
 
-        for (int end = len-8; i <= end; i += 8) {
-            long k = _gatherLongLE(data, i);
+        for (int end = data.length-8; i <= end; i += 8) {
+            long k = gatherLongLE(data, i);
 
-            k *= M;
-            k ^= k >>> r;
-            k *= M;
-            h *= M;
+            k *= m;
+            k ^= k >>> R;
+            k *= m;
+            h *= m;
             h ^= k;
         }
         
+        final int len = data.length;
         if (i < len) {
-            switch (len - i) {
-            case 7:
-                h ^= (long) data[len - 7] << 48;
-            case 6:
-                h ^= (long) data[len - 6] << 40;
-            case 5:
-                h ^= (long) data[len - 5] << 32;
-            case 4:
-                h ^= (long) data[len - 4] << 24;
-            case 3:
-                h ^= (long) data[len - 3] << 16;
-            case 2:
-                h ^= (long) data[len - 2] << 8;
-            case 1:
-                h ^= (long) data[len - 1];
-            }
-            h *= M;
+            h *= gatherPartialLongLE(data, i, (len-i));
         }
 
-        h ^= h >> r;
-        h *= M;
-        h ^= h >> r;
+        h ^= h >> R;
+        h *= m;
+        h ^= h >> R;
 
         return h;
-    }
-
-    private final static long _gatherLongLE(byte[] data, int index)
-    {
-        long l1 = _gatherIntLE(data, index);
-        long l2 = _gatherIntLE(data, index+4);
-        // need to do bit of juggling to get rid of pesky sign extension...
-        return ((l1 << 32) >> 32) | (l2 << 32);
-    }
-    
-    private final static int _gatherIntLE(byte[] data, int index)
-    {    
-        int i = data[index] & 0xFF;
-        i |= (data[++index] & 0xFF) << 8;
-        i |= (data[++index] & 0xFF) << 16;
-        i |= (data[++index] << 24);
-        return i;
     }
 }
