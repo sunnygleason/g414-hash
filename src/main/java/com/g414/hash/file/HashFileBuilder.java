@@ -35,6 +35,9 @@ import com.g414.hash.file.impl.Calculations;
  * different hash function (murmur) and 64-bit hash cades and position offsets.
  */
 public final class HashFileBuilder {
+    /** size of chunk used for bulk file transfer */
+    private static final int FILE_TRANSFER_CHUNK_SIZE = 512 * 1024 * 1024; // 512MB
+
     /** size of write buffer for main data file */
     private static final int MAIN_WRITE_BUFFER_SIZE = 16 * 1024 * 1024; // 16MB
 
@@ -92,7 +95,7 @@ public final class HashFileBuilder {
         }
 
         this.bucketTableLength = buckets * Calculations.LONG_POINTER_SIZE;
-        this.totalHeaderLength = Calculations.MAGIC.length() + 8 + 8 + 4
+        this.totalHeaderLength = Calculations.getBucketTableOffset()
                 + this.bucketTableLength;
 
         this.bucketCounts = new long[buckets];
@@ -173,8 +176,14 @@ public final class HashFileBuilder {
         writeHashTable(radixFilePrefix, this.bucketPower, bucketOffsets,
                 bucketCounts, tempHashTableFile);
 
-        tempHashTableFile.getChannel().transferTo(0,
-                tempHashTableFile.length(), dataFileRandomAccess.getChannel());
+        long todo = tempHashTableFile.length();
+        long done = 0L;
+        while (todo > 0) {
+            long chunk = Math.min(todo, FILE_TRANSFER_CHUNK_SIZE);
+            tempHashTableFile.getChannel().transferTo(done, chunk, dataFileRandomAccess.getChannel());
+            todo -= chunk;
+            done += chunk;
+        }
 
         tempHashTableFile.close();
         (new File(tempHashTableFileName)).delete();

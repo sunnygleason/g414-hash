@@ -22,7 +22,7 @@ package com.g414.hash;
  */
 public class LongHashMethods {
     /** take a bunch of random bytes and turn them into a single long */
-    public long condenseBytesIntoLong(byte[] representation) {
+    public static final long condenseBytesIntoLong(byte[] representation) {
         long seed = 0L;
         int pos = 0;
 
@@ -35,55 +35,74 @@ public class LongHashMethods {
         return seed;
     }
 
-    public final static long gatherLongLE(byte[] data, int index)
-    {
+    /** gather a long from the specified index into the byte array */
+    public static final long gatherLongLE(byte[] data, int index) {
         int i1 = gatherIntLE(data, index);
-        long l2 = gatherIntLE(data, index+4);
+        long l2 = gatherIntLE(data, index + 4);
+
         return uintToLong(i1) | (l2 << 32);
     }
 
-    public final static long gatherPartialLongLE(byte[] data, int index, int available)
-    {
+    /**
+     * gather a partial long from the specified index using the specified number
+     * of bytes into the byte array
+     */
+    public static final long gatherPartialLongLE(byte[] data, int index,
+            int available) {
         if (available >= 4) {
             int i = gatherIntLE(data, index);
             long l = uintToLong(i);
+
             available -= 4;
+
             if (available == 0) {
                 return l;
             }
-            int i2 = gatherPartialIntLE(data, index+4, available);
+
+            int i2 = gatherPartialIntLE(data, index + 4, available);
+
             l <<= (available << 3);
             l |= (long) i2;
+
             return l;
         }
+
         return (long) gatherPartialIntLE(data, index, available);
     }
 
-    // Helper method to do unsigned extension of int to long
-    public final static long uintToLong(int i) {
+    /** perform unsigned extension of int to long */
+    public static final long uintToLong(int i) {
         long l = (long) i;
+
         return (l << 32) >>> 32;
     }
-    
-    public final static int gatherIntLE(byte[] data, int index)
-    {    
+
+    /** gather an int from the specified index into the byte array */
+    public static final int gatherIntLE(byte[] data, int index) {
         int i = data[index] & 0xFF;
+
         i |= (data[++index] & 0xFF) << 8;
         i |= (data[++index] & 0xFF) << 16;
         i |= (data[++index] << 24);
+
         return i;
     }
 
-    private final static int gatherPartialIntLE(byte[] data, int index, int available)
-    {    
+    /**
+     * gather a partial int from the specified index using the specified number
+     * of bytes into the byte array
+     */
+    public static final int gatherPartialIntLE(byte[] data, int index,
+            int available) {
         int i = data[index] & 0xFF;
+
         if (available > 1) {
             i |= (data[++index] & 0xFF) << 8;
             if (available > 2) {
                 i |= (data[++index] & 0xFF) << 16;
             }
         }
+
         return i;
     }
-
 }

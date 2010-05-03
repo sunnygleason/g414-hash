@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.g414.hash.impl;
+package com.g414.hash.impl.cur;
 
 import com.g414.hash.LongHash;
 
@@ -31,8 +31,12 @@ import static com.g414.hash.LongHashMethods.*;
  * The C version of MurmurHash 2.0 by Austin Appleby found at that site was
  * ported to Java by Andrzej Bialecki (ab at getopt org).
  * </p>
+ * 
+ * HISTORY: Updated 2010/05/01 by TS; performance enhancements (use int
+ * arithmetic instead of long). Functionality should be exactly the same, but
+ * created new class name for conservatism.
  */
-public class MurmurHash_new implements LongHash {
+public class MurmurHash_vA5E5 implements LongHash {
     private final static long M = 0xc6a4a7935bd1e995L;
     private final static int R = 47;
 
@@ -52,7 +56,7 @@ public class MurmurHash_new implements LongHash {
     public long getLongHashCode(byte[] data) {
         return computeMurmurHash(data, 0L);
     }
-    
+
     /** @see LongHash#getLongHashCodes(String, int) */
     @Override
     public long[] getLongHashCodes(String object, int k) {
@@ -82,7 +86,7 @@ public class MurmurHash_new implements LongHash {
         long h = seed ^ data.length;
         int i = 0;
 
-        for (int end = data.length-8; i <= end; i += 8) {
+        for (int end = data.length - 8; i <= end; i += 8) {
             long k = gatherLongLE(data, i);
 
             k *= m;
@@ -91,10 +95,10 @@ public class MurmurHash_new implements LongHash {
             h *= m;
             h ^= k;
         }
-        
+
         final int len = data.length;
         if (i < len) {
-            h *= gatherPartialLongLE(data, i, (len-i));
+            h *= gatherPartialLongLE(data, i, (len - i));
         }
 
         h ^= h >> R;

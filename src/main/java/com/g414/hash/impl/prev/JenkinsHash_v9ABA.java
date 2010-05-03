@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.g414.hash.impl;
+package com.g414.hash.impl.prev;
+
+import java.io.UnsupportedEncodingException;
 
 import com.g414.hash.LongHash;
-
-import static com.g414.hash.LongHashMethods.*;
 
 /**
  * <pre>
@@ -35,7 +35,7 @@ import static com.g414.hash.LongHashMethods.*;
  * @see <a href="http://burtleburtle.net/bob/hash/doobs.html">Has update on the
  *      Dr. Dobbs Article</a>
  */
-public class JenkinsHash_new implements LongHash {
+public class JenkinsHash_v9ABA implements LongHash {
     /** @see LongHash#getName() */
     @Override
     public String getName() {
@@ -45,14 +45,18 @@ public class JenkinsHash_new implements LongHash {
     /** @see LongHash#getLongHashCode(String) */
     @Override
     public long getLongHashCode(String object) {
-        return computeJenkinsHash(object.getBytes(), 0L);
+        try {
+            return computeJenkinsHash(object.getBytes("UTF-8"), 0L);
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException("Java doesn't recognize UTF-8?!");
+        }
     }
 
     @Override
     public long getLongHashCode(byte[] data) {
         return computeJenkinsHash(data, 0L);
     }
-    
+
     /** @see LongHash#getLongHashCodes(String, int) */
     @Override
     public long[] getLongHashCodes(String object, int k) {
@@ -106,10 +110,17 @@ public class JenkinsHash_new implements LongHash {
         /*---------------------------------------- handle most of the key */
         int i = 0;
         while (len >= 24) {
-            a += gatherLongLE(k, i);
-            b += gatherLongLE(k, i+8);
-            c += gatherLongLE(k, i+16);            
-            
+            a += (k[i] + ((long) k[i + 1] << 8) + ((long) k[i + 2] << 16)
+                    + ((long) k[i + 3] << 24) + ((long) k[i + 4] << 32)
+                    + ((long) k[i + 5] << 40) + ((long) k[i + 6] << 48) + ((long) k[i + 7] << 56));
+            b += (k[i + 8] + ((long) k[i + 9] << 8) + ((long) k[i + 10] << 16)
+                    + ((long) k[i + 11] << 24) + ((long) k[i + 12] << 32)
+                    + ((long) k[i + 13] << 40) + ((long) k[i + 14] << 48) + ((long) k[i + 15] << 56));
+            c += (k[i + 16] + ((long) k[i + 17] << 8)
+                    + ((long) k[i + 18] << 16) + ((long) k[i + 19] << 24)
+                    + ((long) k[i + 20] << 32) + ((long) k[i + 21] << 40)
+                    + ((long) k[i + 22] << 48) + ((long) k[i + 23] << 56));
+
             /* mix64(a, b, c); */
             a -= b;
             a -= c;
@@ -155,22 +166,56 @@ public class JenkinsHash_new implements LongHash {
 
         /*------------------------------------- handle the last 23 bytes */
         c += k.length;
-        
-        if (len > 0) {
-            if (len >= 8) {
-                a += gatherLongLE(k, i);                
-                if (len >= 16) {
-                    b += gatherLongLE(k, i+8);
-                    // this is bit asymmetric; LSB is reserved for length (see above)
-                    if (len > 16) {
-                        c += (gatherPartialLongLE(k, i+16, len-16) << 8);
-                    }
-                } else if (len > 8) {
-                    b += gatherPartialLongLE(k, i+8, len-8);
-                }
-            } else {
-                a += gatherPartialLongLE(k, i, len);         
-            }
+        switch (len) /* all the case statements fall through */
+        {
+        case 23:
+            c += ((long) k[i + 22] << 56);
+        case 22:
+            c += ((long) k[i + 21] << 48);
+        case 21:
+            c += ((long) k[i + 20] << 40);
+        case 20:
+            c += ((long) k[i + 19] << 32);
+        case 19:
+            c += ((long) k[i + 18] << 24);
+        case 18:
+            c += ((long) k[i + 17] << 16);
+        case 17:
+            c += ((long) k[i + 16] << 8);
+            /* the first byte of c is reserved for the length */
+        case 16:
+            b += ((long) k[i + 15] << 56);
+        case 15:
+            b += ((long) k[i + 14] << 48);
+        case 14:
+            b += ((long) k[i + 13] << 40);
+        case 13:
+            b += ((long) k[i + 12] << 32);
+        case 12:
+            b += ((long) k[i + 11] << 24);
+        case 11:
+            b += ((long) k[i + 10] << 16);
+        case 10:
+            b += ((long) k[i + 9] << 8);
+        case 9:
+            b += ((long) k[i + 8]);
+        case 8:
+            a += ((long) k[i + 7] << 56);
+        case 7:
+            a += ((long) k[i + 6] << 48);
+        case 6:
+            a += ((long) k[i + 5] << 40);
+        case 5:
+            a += ((long) k[i + 4] << 32);
+        case 4:
+            a += ((long) k[i + 3] << 24);
+        case 3:
+            a += ((long) k[i + 2] << 16);
+        case 2:
+            a += ((long) k[i + 1] << 8);
+        case 1:
+            a += ((long) k[i]);
+            /* case 0: nothing left to add */
         }
 
         /* mix64(a, b, c); */

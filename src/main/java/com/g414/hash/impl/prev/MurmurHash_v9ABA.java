@@ -1,4 +1,6 @@
-package com.g414.hash.impl;
+package com.g414.hash.impl.prev;
+
+import java.io.UnsupportedEncodingException;
 
 import com.g414.hash.LongHash;
 
@@ -23,14 +25,18 @@ public class MurmurHash_v9ABA implements LongHash {
     /** @see LongHash#getLongHashCode(String) */
     @Override
     public long getLongHashCode(String object) {
-        return computeMurmurHash(object.getBytes(), 0L);
+        try {
+            return computeMurmurHash(object.getBytes("UTF-8"), 0L);
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException("Java doesn't recognize UTF-8?!");
+        }
     }
 
     @Override
     public long getLongHashCode(byte[] data) {
         return computeMurmurHash(data, 0L);
     }
-    
+
     /** @see LongHash#getLongHashCodes(String, int) */
     @Override
     public long[] getLongHashCodes(String object, int k) {

@@ -1,15 +1,19 @@
 package com.g414.hash.impl;
 
 import com.g414.hash.LongHash;
+import com.g414.hash.impl.cur.JenkinsHash_vA5E5;
+import com.g414.hash.impl.cur.MurmurHash_vA5E5;
+import com.g414.hash.impl.prev.JenkinsHash_v9ABA;
+import com.g414.hash.impl.prev.MurmurHash_v9ABA;
 
 /**
  * Silly micro-benchmark for testing relative speeds of Murmur hash implementations.
  */
 public class TestLongHashPerf {
     final static LongHash[] hashes = new LongHash[] {
-            new MurmurHash_new(),
+            new MurmurHash_vA5E5(),
             new MurmurHash_v9ABA(),
-            new JenkinsHash_new(),
+            new JenkinsHash_vA5E5(),
             new JenkinsHash_v9ABA()
     };
 
@@ -26,7 +30,7 @@ public class TestLongHashPerf {
             LongHash h = hashes[++round % hashes.length];
             long start = System.currentTimeMillis();
             int total = 0;
-            for (int i = 150000; --i >= 0; ){
+            for (int i = 15000000; --i >= 0; ){
                 total += (int) h.getLongHashCode(TEST_DATA);
             }
             long time = System.currentTimeMillis() - start;

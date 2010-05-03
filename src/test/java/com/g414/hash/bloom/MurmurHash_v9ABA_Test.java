@@ -18,7 +18,7 @@
 package com.g414.hash.bloom;
 
 import com.g414.hash.LongHash;
-import com.g414.hash.impl.MurmurHash_v9ABA;
+import com.g414.hash.impl.prev.MurmurHash_v9ABA;
 
 public class MurmurHash_v9ABA_Test extends BloomFilterTestBase {
     @Override

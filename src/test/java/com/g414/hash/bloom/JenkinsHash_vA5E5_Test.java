@@ -18,11 +18,11 @@
 package com.g414.hash.bloom;
 
 import com.g414.hash.LongHash;
-import com.g414.hash.impl.cur.Sha1PrngHash_v9ABA;
+import com.g414.hash.impl.cur.JenkinsHash_vA5E5;
 
-public class Sha1PrngHash_v9ABA_Test extends BloomFilterTestBase {
+public class JenkinsHash_vA5E5_Test extends BloomFilterTestBase {
     @Override
     public LongHash getHash() {
-        return new Sha1PrngHash_v9ABA();
+        return new JenkinsHash_vA5E5();
     }
 }

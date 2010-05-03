@@ -15,8 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.g414.hash.impl;
+package com.g414.hash.impl.cur;
 
+import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -30,9 +31,6 @@ import com.g414.hash.LongHashMethods;
  * hash codes. Pretty trusty. Version 2009-11-15T22:00.
  */
 public class Sha1PrngHash_v9ABA implements LongHash {
-    /** HashMethods implementation */
-    private static final LongHashMethods util = new LongHashMethods();
-
     /** @see LongHash#getName() */
     @Override
     public String getName() {
@@ -42,16 +40,22 @@ public class Sha1PrngHash_v9ABA implements LongHash {
     /** @see LongHash#getLongHashCode(String) */
     @Override
     public long getLongHashCode(String object) {
-        byte[] signature = getDigest(object.getBytes());
-        return util.condenseBytesIntoLong(signature);
+        try {
+            byte[] signature = getDigest(object.getBytes("UTF-8"));
+
+            return LongHashMethods.condenseBytesIntoLong(signature);
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException("Java doesn't recognize UTF-8?!");
+        }
     }
 
     @Override
     public long getLongHashCode(byte[] data) {
         byte[] signature = getDigest(data);
-        return util.condenseBytesIntoLong(signature);
+
+        return LongHashMethods.condenseBytesIntoLong(signature);
     }
-    
+
     /** @see LongHash#getLongHashCodes(String, int) */
     @Override
     public long[] getLongHashCodes(String object, int k) {
@@ -60,7 +64,7 @@ public class Sha1PrngHash_v9ABA implements LongHash {
         }
 
         byte[] signature = getDigest(object.getBytes());
-        long seed = util.condenseBytesIntoLong(signature);
+        long seed = LongHashMethods.condenseBytesIntoLong(signature);
 
         Random random = getRandom(seed);
 
@@ -81,7 +85,7 @@ public class Sha1PrngHash_v9ABA implements LongHash {
 
             return digest.digest(object);
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException(e);
         }
     }
 
@@ -93,7 +97,7 @@ public class Sha1PrngHash_v9ABA implements LongHash {
 
             return random;
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException(e);
         }
     }
 }

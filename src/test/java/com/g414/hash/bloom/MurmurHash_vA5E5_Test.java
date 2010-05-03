@@ -18,11 +18,11 @@
 package com.g414.hash.bloom;
 
 import com.g414.hash.LongHash;
-import com.g414.hash.impl.cur.Sha1PrngHash_v9ABA;
+import com.g414.hash.impl.cur.MurmurHash_vA5E5;
 
-public class Sha1PrngHash_v9ABA_Test extends BloomFilterTestBase {
+public class MurmurHash_vA5E5_Test extends BloomFilterTestBase {
     @Override
     public LongHash getHash() {
-        return new Sha1PrngHash_v9ABA();
+        return new MurmurHash_vA5E5();
     }
 }

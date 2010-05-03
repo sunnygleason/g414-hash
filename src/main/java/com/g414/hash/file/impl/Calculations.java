@@ -17,7 +17,7 @@
  */
 package com.g414.hash.file.impl;
 
-import com.g414.hash.impl.MurmurHash_new;
+import com.g414.hash.impl.cur.MurmurHash_vA5E5;
 
 /**
  * Encapsulates calculations related to HashFiles.
@@ -39,7 +39,7 @@ public class Calculations {
     public static final int RADIX_FILE_COUNT = (1 << RADIX_FILE_COUNT_POWER_OF_2);
 
     /** our trusty hash function */
-    private static final MurmurHash_new hash = new MurmurHash_new();
+    private static final MurmurHash_vA5E5 hash = new MurmurHash_vA5E5();
 
     /** Computes the hash value of a given byte[] key */
     public static long computeHash(byte[] key) {
@@ -84,5 +84,11 @@ public class Calculations {
     /** returns the appropriate radix file for a given hash value */
     public static int getRadix(long hashValue, int buckets) {
         return (int) (getBucket(hashValue, buckets) >> (buckets - 8));
+    }
+
+    /** returns the bucket table offset in the header */
+    public static int getBucketTableOffset() {
+        /* HEADER: MAGIC, VERSION, COUNT, BUCKET_POWER */
+        return MAGIC.length() + 8 + 8 + 4;
     }
 }

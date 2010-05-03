@@ -7,7 +7,7 @@ import java.util.Random;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.g414.hash.impl.MurmurHash_v9ABA;
+import com.g414.hash.impl.prev.MurmurHash_v9ABA;
 
 public class TestHashFile {
     MurmurHash_v9ABA hash = new MurmurHash_v9ABA();
@@ -45,13 +45,18 @@ public class TestHashFile {
         doHashFileTest(1000000, 10000);
     }
 
-    @Test(groups = "slow")
+    @Test
     public void testLargeHashFile() throws Exception {
         doHashFileTest(100000000, 10000);
     }
 
-    @Test(groups = "slow")
+    @Test
     public void testXLargeHashFile() throws Exception {
+        doHashFileTest(250000000L, 10000);
+    }
+
+    @Test(groups = "slow")
+    public void testXXLargeHashFile() throws Exception {
         doHashFileTest(10000000000L, 10000);
     }
 

@@ -38,16 +38,18 @@ public abstract class BloomFilterTestBase {
     public BloomTestConfig[] fastConfigs = new BloomTestConfig[] {
             new BloomTestConfig(10000, 500, 8, 1),
             new BloomTestConfig(10000, 1000, 8, 1),
-            new BloomTestConfig(10000, 5000, 8, 1), };
-
-    public BloomTestConfig[] slowConfigs = new BloomTestConfig[] {
+            new BloomTestConfig(10000, 5000, 8, 1),
             new BloomTestConfig(1000000, 100000, 8, 1),
             new BloomTestConfig(1000000, 100000, 16, 1),
-            new BloomTestConfig(1000000, 100000, 24, 1),
+            new BloomTestConfig(1000000, 100000, 24, 1) };
+
+    public BloomTestConfig[] slowConfigs = new BloomTestConfig[] {
             new BloomTestConfig(10000000, 100000, 16, 1),
             new BloomTestConfig(10000000, 100000, 24, 1),
             new BloomTestConfig(1000000000, 1000000, 24, 1),
-            new BloomTestConfig(1000000000, 1000000, 32, 1), };
+            new BloomTestConfig(1000000000, 1000000, 32, 1),
+            new BloomTestConfig(10000000000L, 10000000, 24, 1),
+            new BloomTestConfig(10000000000L, 10000000, 32, 1), };
 
     @Test
     public void testBloom_random_fast() throws Exception {
@@ -84,7 +86,8 @@ public abstract class BloomFilterTestBase {
             random.setSeed(config.seed);
 
             for (int i = 0; i < config.maxSize; i++) {
-                filter.put("test__" + random.nextInt(config.MAX_DOMAIN));
+                filter.put("test__"
+                        + (Math.abs(random.nextLong()) % config.MAX_DOMAIN));
             }
 
             int pos = 0;
@@ -138,19 +141,19 @@ public abstract class BloomFilterTestBase {
             System.out.println("bloom test deterministic result : " + falsePos
                     + "  " + projectedErrors);
 
-            Assert.assertTrue(falsePos * 0.95 <= 1 + Math
+            Assert.assertTrue(falsePos * 0.95 <= 10 + Math
                     .ceil(config.MAX_DOMAIN
                             * Math.pow(0.62, config.bitsPerItem)));
         }
     }
 
     public static class BloomTestConfig {
-        public int MAX_DOMAIN;
+        public long MAX_DOMAIN;
         public int maxSize;
         public int bitsPerItem;
         public long seed;
 
-        public BloomTestConfig(int MAX_DOMAIN, int maxSize, int bitsPerItem,
+        public BloomTestConfig(long MAX_DOMAIN, int maxSize, int bitsPerItem,
                 long seed) {
             this.MAX_DOMAIN = MAX_DOMAIN;
             this.maxSize = maxSize;

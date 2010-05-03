@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
+import java.nio.channels.FileChannel.MapMode;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -98,8 +99,8 @@ public class HashFile {
         this.buckets = 1 << bucketPower;
         int slotTableLength = this.buckets * Calculations.LONG_POINTER_SIZE;
 
-        ByteBuffer table = ByteBuffer.allocate(slotTableLength);
-        hashFile.readFully(table.array());
+        ByteBuffer table = hashFile.getChannel().map(MapMode.READ_ONLY,
+                Calculations.getBucketTableOffset(), slotTableLength);
 
         hashTableOffsets = table.asLongBuffer().asReadOnlyBuffer();
     }
@@ -258,8 +259,8 @@ public class HashFile {
                     final int buckets = 1 << bucketPower;
                     final long slotTableLength = buckets
                             * Calculations.LONG_POINTER_SIZE;
-                    final long headerLength = Calculations.MAGIC.length() + 8
-                            + 8 + 4 + slotTableLength;
+                    final long headerLength = Calculations.getBucketTableOffset()
+                            + slotTableLength;
 
                     final long eod = in.readLong();
 
