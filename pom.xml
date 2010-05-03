@@ -28,7 +28,7 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <argLine>-Xms1024m -Xmx1024m</argLine>
+          <argLine>-Xms1500m -Xmx1500m</argLine>
           <excludedGroups>slow</excludedGroups>
         </configuration>
       </plugin>
