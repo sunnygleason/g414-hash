@@ -1,0 +1,26 @@
+================================================================
+THANKS.txt : taking a moment to be grateful...
+================================================================
+
+: 2010/05/01 :
+
+  - Big thanks to Tatu Saloranta for performance enhancements to the Jenkins and
+    Murmur hash implementations. You ROCK!
+
+
+: 2010/04/30 :
+
+  - Thanks to DJ Bernstein for creating the original CDB, and to
+    Michael Alyn Miller for a trusty implementation in java (sg-cdb).
+    Hopefully HashFile is worthy of this legacy!
+
+
+: 2010/04/01 :
+
+  - Thanks to Jon Ellis of the Cassandra Project for providing a great blog
+    entry on hash functions, leading me to look at the Murmur hash in more
+    detail. Thanks to Austin Appleby and Andrzej Bialecki for their work on the
+    Murmur hash in C and Java, respectively.
+    
+  - Thanks to Bob Jenkins for creating an outstanding 64-bit hash function.
+  
