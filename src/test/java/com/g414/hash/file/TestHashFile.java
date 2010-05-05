@@ -2,6 +2,7 @@ package com.g414.hash.file;
 
 import java.io.File;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 
 import org.testng.Assert;
@@ -46,11 +47,16 @@ public class TestHashFile {
     }
 
     @Test
+    public void testMediumHashFileMulti() throws Exception {
+        doHashFileMultiTest(1000000, 1000);
+    }
+
+    @Test(groups = "slow")
     public void testLargeHashFile() throws Exception {
         doHashFileTest(100000000, 10000);
     }
 
-    @Test
+    @Test(groups = "slow")
     public void testXLargeHashFile() throws Exception {
         doHashFileTest(250000000L, 10000);
     }
@@ -132,6 +138,53 @@ public class TestHashFile {
         }
         System.out.println(new Date() + " done...");
 
+        tmp.delete();
+    }
+
+    public void doHashFileMultiTest(long size, long confidence)
+            throws Exception {
+        File tmp = File.createTempFile("hhhhhmm", "ff");
+
+        System.out.println(tmp.getAbsolutePath());
+        System.out.println(new Date() + " writing...");
+
+        HashFileBuilder hashWrite = new HashFileBuilder(tmp.getAbsolutePath(),
+                size);
+
+        for (long i = 0; i < size; i++) {
+            byte[] k = Long.valueOf(i).toString().getBytes();
+            byte[] v = Long.valueOf(-i).toString().getBytes();
+            hashWrite.add(k, k);
+            hashWrite.add(k, v);
+
+            if (i % 1000000 == 0) {
+                System.out.println(new Date() + " wrote: " + i);
+            }
+        }
+
+        System.out.println(new Date() + " finishing...");
+        hashWrite.finish();
+
+        System.out.println(new Date() + " checking multi...");
+        Random rand = new Random();
+
+        HashFile hRead = new HashFile(tmp.getAbsolutePath());
+        for (long t = 0; t < confidence; t++) {
+            int i = size < Integer.MAX_VALUE ? rand.nextInt((int) size)
+                    : (int) (Math.abs(rand.nextLong()) % size);
+
+            byte[] k = Long.valueOf(i).toString().getBytes();
+            byte[] v = Long.valueOf(-i).toString().getBytes();
+            List<byte[]> f = hRead.getMulti(k);
+
+            Assert.assertTrue(!f.isEmpty());
+            Assert.assertEquals(f.size(), 2);
+            Assert.assertEquals(f.get(0), k);
+            Assert.assertEquals(f.get(1), v);
+        }
+
+        System.out.println(new Date() + " done...");
+        hRead.close();
         tmp.delete();
     }
 }

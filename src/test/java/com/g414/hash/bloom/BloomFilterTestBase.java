@@ -39,11 +39,12 @@ public abstract class BloomFilterTestBase {
             new BloomTestConfig(10000, 500, 8, 1),
             new BloomTestConfig(10000, 1000, 8, 1),
             new BloomTestConfig(10000, 5000, 8, 1),
-            new BloomTestConfig(1000000, 100000, 8, 1),
-            new BloomTestConfig(1000000, 100000, 16, 1),
-            new BloomTestConfig(1000000, 100000, 24, 1) };
+            new BloomTestConfig(100000, 50000, 16, 1) };
 
     public BloomTestConfig[] slowConfigs = new BloomTestConfig[] {
+            new BloomTestConfig(1000000, 100000, 8, 1),
+            new BloomTestConfig(1000000, 100000, 16, 1),
+            new BloomTestConfig(1000000, 100000, 24, 1),
             new BloomTestConfig(10000000, 100000, 16, 1),
             new BloomTestConfig(10000000, 100000, 24, 1),
             new BloomTestConfig(1000000000, 1000000, 24, 1),

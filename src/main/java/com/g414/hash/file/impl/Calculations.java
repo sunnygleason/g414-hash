@@ -62,7 +62,7 @@ public class Calculations {
         int powerOf2 = (64 - Long.numberOfLeadingZeros(expectedElements));
         long ceiling = 1L << powerOf2;
 
-        if ((ceiling ^ expectedElements) != 0) {
+        if (expectedElements > ceiling) {
             powerOf2 += 1;
         }
 
