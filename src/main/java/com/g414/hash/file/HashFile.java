@@ -69,6 +69,20 @@ public class HashFile {
      *                if the HashFile could not be opened.
      */
     public HashFile(String hashFileName) throws IOException {
+        this(hashFileName, true);
+    }
+
+    /**
+     * Creates an instance of HashFile and loads the given file path.
+     * 
+     * @param hashFileName
+     *            The path to the HashFile to open.
+     * @param eager
+     *            whether to read bucket table eagerly
+     * @exception IOException
+     *                if the HashFile could not be opened.
+     */
+    public HashFile(String hashFileName, boolean eager) throws IOException {
         hashFile = new RandomAccessFile(hashFileName, "r");
 
         byte[] inMagic = new byte[Calculations.MAGIC.length()];
@@ -91,6 +105,13 @@ public class HashFile {
                 Calculations.getBucketTableOffset(), slotTableLength);
 
         hashTableOffsets = table.asLongBuffer().asReadOnlyBuffer();
+
+        if (eager) {
+            for (int i = 0; i < this.buckets; i++) {
+                hashTableOffsets.get(i * 2);
+                hashTableOffsets.get((i * 2) + 1);
+            }
+        }
     }
 
     /** returns the number of entries in this HashFile */

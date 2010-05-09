@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
+import java.nio.channels.FileChannel.MapMode;
 
 import com.g414.hash.file.impl.Calculations;
 
@@ -110,8 +111,10 @@ public final class HashFileBuilder {
         this.hashCodeList = new DataOutputStream[Calculations.RADIX_FILE_COUNT];
         for (int i = 0; i < Calculations.RADIX_FILE_COUNT; i++) {
             String filename = String.format("%s%02X", radixFilePrefix, i);
+            File hashFile = new File(filename);
             hashCodeList[i] = new DataOutputStream(new BufferedOutputStream(
-                    new FileOutputStream(filename), HASH_WRITE_BUFFER_SIZE));
+                    new FileOutputStream(hashFile), HASH_WRITE_BUFFER_SIZE));
+            hashFile.deleteOnExit();
         }
 
         this.dataFilePosition = this.totalHeaderLength;
@@ -172,6 +175,7 @@ public final class HashFileBuilder {
 
         RandomAccessFile tempHashTableFile = new RandomAccessFile(
                 tempHashTableFileName, "rw");
+        (new File(tempHashTableFileName)).deleteOnExit();
 
         writeHashTable(radixFilePrefix, this.bucketPower, bucketOffsets,
                 bucketCounts, tempHashTableFile);
@@ -180,7 +184,8 @@ public final class HashFileBuilder {
         long done = 0L;
         while (todo > 0) {
             long chunk = Math.min(todo, FILE_TRANSFER_CHUNK_SIZE);
-            tempHashTableFile.getChannel().transferTo(done, chunk, dataFileRandomAccess.getChannel());
+            tempHashTableFile.getChannel().transferTo(done, chunk,
+                    dataFileRandomAccess.getChannel());
             todo -= chunk;
             done += chunk;
         }
@@ -229,15 +234,13 @@ public final class HashFileBuilder {
                 continue;
             }
 
-            ByteBuffer radixFileBytes = ByteBuffer
-                    .allocate((int) radixFileLength);
+            LongBuffer radixFileLongs = radixFile.getChannel().map(
+                    MapMode.READ_ONLY, 0, radixFileLength).asLongBuffer()
+                    .asReadOnlyBuffer();
+
             ByteBuffer hashTableBytes = ByteBuffer
                     .allocate((int) radixFileLength);
-            LongBuffer radixFileLongs = radixFileBytes.asLongBuffer();
             LongBuffer hashTableLongs = hashTableBytes.asLongBuffer();
-
-            radixFile.seek(0);
-            radixFile.read(radixFileBytes.array());
 
             for (int j = 0; j < entries; j++) {
                 long hashCode = radixFileLongs.get(j * 2);
