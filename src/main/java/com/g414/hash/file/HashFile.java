@@ -42,6 +42,9 @@ public class HashFile {
     /** size of read buffer for iterator */
     private static final int ITERATOR_READ_BUFFER_LENGTH = 16 * 1024 * 1024; // 16MB
 
+    /** size of read buffer for the random-access data file reads */
+    private static final int RANDOM_READ_BUFFER_LENGTH = 2 * 1024; // 2KB
+
     /** The RandomAccessFile for the HashFile */
     private RandomAccessFile hashFile = null;
 
@@ -107,9 +110,10 @@ public class HashFile {
         hashTableOffsets = table.asLongBuffer().asReadOnlyBuffer();
 
         if (eager) {
-            for (int i = 0; i < this.buckets; i++) {
-                hashTableOffsets.get(i * 2);
-                hashTableOffsets.get((i * 2) + 1);
+            int slots = this.buckets * 2;
+            for (int i = 0; i < slots; i += 2) {
+                hashTableOffsets.get(i);
+                hashTableOffsets.get(i + 1);
             }
         }
     }
@@ -147,44 +151,46 @@ public class HashFile {
         long currentHashKey = Calculations.computeHash(key);
 
         int slot = Calculations.getBucket(currentHashKey,
-                HashFile.this.bucketPower);
+                HashFile.this.bucketPower) * 2;
 
-        long currentHashTableBasePosition = hashTableOffsets.get(slot * 2);
-        long currentHashTableSize = hashTableOffsets.get((slot * 2) + 1);
-        long currentHashTableLimitPosition = (currentHashTableBasePosition + (currentHashTableSize * 16));
+        long currentHashTableBasePosition = hashTableOffsets.get(slot);
+        long currentHashTableSize = hashTableOffsets.get(slot + 1);
 
         if (currentHashTableSize == 0) {
             return null;
         }
 
-        long probe = Math.abs(currentHashKey) % currentHashTableSize;
+        int probe = (int) (Math.abs(currentHashKey) % currentHashTableSize);
 
-        long currentHashKeyTableIndex = currentHashTableBasePosition
-                + (probe * 16);
+        ByteBuffer tableBytes = ByteBuffer
+                .allocate(Calculations.LONG_POINTER_SIZE
+                        * ((int) currentHashTableSize));
+        LongBuffer table = tableBytes.asLongBuffer();
+
+        ByteBuffer fileBytes = ByteBuffer.allocate(RANDOM_READ_BUFFER_LENGTH);
 
         try {
+            synchronized (hashFile) {
+                hashFile.seek(currentHashTableBasePosition);
+                hashFile.readFully(tableBytes.array());
+            }
+
             long currentFindOperationIndex = 0;
 
             while (currentFindOperationIndex < currentHashTableSize) {
-                long probedHashCode = 0;
-                long probedPosition = 0;
-
-                synchronized (hashFile) {
-                    hashFile.seek(currentHashKeyTableIndex);
-
-                    probedHashCode = hashFile.readLong();
-                    probedPosition = hashFile.readLong();
-                }
+                int probeSlot = 2 * probe;
+                long probedHashCode = table.get(probeSlot);
+                long probedPosition = table.get(probeSlot + 1);
 
                 if (probedPosition == 0) {
                     return null;
                 }
 
                 currentFindOperationIndex += 1;
-                currentHashKeyTableIndex += 16;
+                probe += 1;
 
-                if (currentHashKeyTableIndex >= currentHashTableLimitPosition) {
-                    currentHashKeyTableIndex = currentHashTableBasePosition;
+                if (probe >= currentHashTableSize) {
+                    probe = 0;
                 }
 
                 if (probedHashCode != currentHashKey) {
@@ -193,27 +199,42 @@ public class HashFile {
 
                 synchronized (hashFile) {
                     hashFile.seek(probedPosition);
-                    int keyLength = hashFile.readInt();
-
-                    if (keyLength != key.length) {
-                        continue;
-                    }
-
-                    int dataLength = hashFile.readInt();
-
-                    byte[] probedKey = new byte[keyLength];
-                    hashFile.readFully(probedKey);
-                    boolean match = Arrays.equals(key, probedKey);
-
-                    if (!match) {
-                        continue;
-                    }
-
-                    byte[] data = new byte[dataLength];
-                    hashFile.readFully(data);
-
-                    return data;
+                    hashFile.read(fileBytes.array());
                 }
+
+                int keyLength = fileBytes.getInt();
+
+                if (keyLength != key.length) {
+                    continue;
+                }
+
+                int dataLength = fileBytes.getInt();
+
+                byte[] probedKey = new byte[keyLength];
+                byte[] data = new byte[dataLength];
+
+                if (8 + keyLength + dataLength < RANDOM_READ_BUFFER_LENGTH) {
+                    fileBytes.get(probedKey);
+
+                    if (!Arrays.equals(key, probedKey)) {
+                        continue;
+                    }
+
+                    fileBytes.get(data);
+                } else {
+                    synchronized (hashFile) {
+                        hashFile.seek(probedPosition);
+                        hashFile.readFully(probedKey);
+
+                        if (!Arrays.equals(key, probedKey)) {
+                            continue;
+                        }
+
+                        hashFile.readFully(data);
+                    }
+                }
+
+                return data;
             }
         } catch (IOException e) {
             throw new RuntimeException("Error while finding key: "
@@ -240,46 +261,46 @@ public class HashFile {
         long currentHashKey = Calculations.computeHash(key);
 
         int slot = Calculations.getBucket(currentHashKey,
-                HashFile.this.bucketPower);
+                HashFile.this.bucketPower) * 2;
 
-        long currentHashTableBasePosition = hashTableOffsets.get(slot * 2);
-        long currentHashTableSize = hashTableOffsets.get((slot * 2) + 1);
-        long currentHashTableLimitPosition = (currentHashTableBasePosition + (currentHashTableSize * 16));
+        long currentHashTableBasePosition = hashTableOffsets.get(slot);
+        long currentHashTableSize = hashTableOffsets.get(slot + 1);
 
         if (currentHashTableSize == 0) {
             return Collections.<byte[]> emptyList();
         }
 
+        ByteBuffer tableBytes = ByteBuffer
+                .allocate(Calculations.LONG_POINTER_SIZE
+                        * ((int) currentHashTableSize));
+        LongBuffer table = tableBytes.asLongBuffer();
+
         List<byte[]> toReturn = new ArrayList<byte[]>();
 
-        long probe = Math.abs(currentHashKey) % currentHashTableSize;
-
-        long currentHashKeyTableIndex = currentHashTableBasePosition
-                + (probe * 16);
+        int probe = (int) (Math.abs(currentHashKey) % currentHashTableSize);
 
         try {
+            synchronized (hashFile) {
+                hashFile.seek(currentHashTableBasePosition);
+                hashFile.readFully(tableBytes.array());
+            }
+
             long currentFindOperationIndex = 0;
 
             while (currentFindOperationIndex < currentHashTableSize) {
-                long probedHashCode = 0;
-                long probedPosition = 0;
-
-                synchronized (hashFile) {
-                    hashFile.seek(currentHashKeyTableIndex);
-
-                    probedHashCode = hashFile.readLong();
-                    probedPosition = hashFile.readLong();
-                }
+                int probeSlot = 2 * probe;
+                long probedHashCode = table.get(probeSlot);
+                long probedPosition = table.get(probeSlot + 1);
 
                 if (probedPosition == 0) {
-                    break;
+                    continue;
                 }
 
                 currentFindOperationIndex += 1;
-                currentHashKeyTableIndex += 16;
+                probe += 1;
 
-                if (currentHashKeyTableIndex >= currentHashTableLimitPosition) {
-                    currentHashKeyTableIndex = currentHashTableBasePosition;
+                if (probe >= currentHashTableSize) {
+                    probe = 0;
                 }
 
                 if (probedHashCode != currentHashKey) {
@@ -298,15 +319,13 @@ public class HashFile {
 
                     byte[] probedKey = new byte[keyLength];
                     hashFile.readFully(probedKey);
-                    boolean match = Arrays.equals(key, probedKey);
 
-                    if (!match) {
+                    if (!Arrays.equals(key, probedKey)) {
                         continue;
                     }
 
                     byte[] data = new byte[dataLength];
                     hashFile.readFully(data);
-
                     toReturn.add(data);
                 }
             }
