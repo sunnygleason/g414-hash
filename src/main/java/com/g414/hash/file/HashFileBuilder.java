@@ -17,10 +17,13 @@
  */
 package com.g414.hash.file;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -44,6 +47,9 @@ public final class HashFileBuilder {
 
     /** size of write buffer for each of the radix files */
     private static final int HASH_WRITE_BUFFER_SIZE = 512 * 1024; // 512K
+
+    /** size of write buffer for main data file */
+    private static final int SEQUENTIAL_READ_BUFFER_SIZE = 16 * 1024 * 1024; // 16MB
 
     /** path to the main data file */
     private final String dataFilePath;
@@ -216,7 +222,7 @@ public final class HashFileBuilder {
             long[] bucketStarts, long[] bucketCounts, DataOutput hashTableFile)
             throws IOException {
         for (int i = 0; i < Calculations.RADIX_FILE_COUNT; i++) {
-            RandomAccessFile radixFile = getRadixFile(radixFilePrefix, i);
+            File radixFile = new File(getRadixFileName(radixFilePrefix, i));
             long radixFileLength = radixFile.length();
 
             /*
@@ -234,17 +240,17 @@ public final class HashFileBuilder {
                 continue;
             }
 
-            LongBuffer radixFileLongs = radixFile.getChannel().map(
-                    MapMode.READ_ONLY, 0, radixFileLength).asLongBuffer()
-                    .asReadOnlyBuffer();
+            final DataInputStream radixFileLongs = new DataInputStream(
+                    new BufferedInputStream(new FileInputStream(radixFile),
+                            SEQUENTIAL_READ_BUFFER_SIZE));
 
             ByteBuffer hashTableBytes = ByteBuffer
                     .allocate((int) radixFileLength);
             LongBuffer hashTableLongs = hashTableBytes.asLongBuffer();
 
             for (int j = 0; j < entries; j++) {
-                long hashCode = radixFileLongs.get(j * 2);
-                long position = radixFileLongs.get((j * 2) + 1);
+                long hashCode = radixFileLongs.readLong();
+                long position = radixFileLongs.readLong();
 
                 int slot = Calculations.getBucket(hashCode, bucketPower);
                 int baseSlot = Calculations.getBaseBucketForHash(hashCode,
@@ -289,11 +295,18 @@ public final class HashFileBuilder {
     }
 
     /**
+     * Returns the hash list file name String corresponding to index i.
+     */
+    private static String getRadixFileName(String radixFilePrefix, int i) {
+        return String.format("%s%02X", radixFilePrefix, i);
+    }
+
+    /**
      * Returns the hash list file corresponding to index i.
      */
     private static RandomAccessFile getRadixFile(String radixFilePrefix, int i)
             throws FileNotFoundException {
-        String radixFileName = String.format("%s%02X", radixFilePrefix, i);
+        String radixFileName = getRadixFileName(radixFilePrefix, i);
         RandomAccessFile radixFile = new RandomAccessFile(radixFileName, "r");
 
         return radixFile;
