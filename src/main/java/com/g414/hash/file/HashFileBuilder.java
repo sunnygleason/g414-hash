@@ -24,13 +24,11 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
-import java.nio.channels.FileChannel.MapMode;
 
 import com.g414.hash.file.impl.Calculations;
 
@@ -39,9 +37,6 @@ import com.g414.hash.file.impl.Calculations;
  * different hash function (murmur) and 64-bit hash cades and position offsets.
  */
 public final class HashFileBuilder {
-    /** size of chunk used for bulk file transfer */
-    private static final int FILE_TRANSFER_CHUNK_SIZE = 512 * 1024 * 1024; // 512MB
-
     /** size of write buffer for main data file */
     private static final int MAIN_WRITE_BUFFER_SIZE = 16 * 1024 * 1024; // 16MB
 
@@ -56,9 +51,6 @@ public final class HashFileBuilder {
 
     /** filename prefix for each of the radix files */
     private final String radixFilePrefix;
-
-    /** path to the hash file */
-    private final String tempHashTableFileName;
 
     /** The RandomAccessFile for the hash file contents */
     private final DataOutputStream dataFile;
@@ -109,7 +101,6 @@ public final class HashFileBuilder {
 
         this.dataFilePath = filepath;
         this.radixFilePrefix = filepath + ".list.";
-        this.tempHashTableFileName = filepath + ".hash";
 
         this.dataFile = new DataOutputStream(new BufferedOutputStream(
                 new FileOutputStream(filepath), MAIN_WRITE_BUFFER_SIZE));
@@ -179,25 +170,8 @@ public final class HashFileBuilder {
                 dataFilePath, "rw");
         dataFileRandomAccess.seek(dataFilePosition);
 
-        RandomAccessFile tempHashTableFile = new RandomAccessFile(
-                tempHashTableFileName, "rw");
-        (new File(tempHashTableFileName)).deleteOnExit();
-
         writeHashTable(radixFilePrefix, this.bucketPower, bucketOffsets,
-                bucketCounts, tempHashTableFile);
-
-        long todo = tempHashTableFile.length();
-        long done = 0L;
-        while (todo > 0) {
-            long chunk = Math.min(todo, FILE_TRANSFER_CHUNK_SIZE);
-            tempHashTableFile.getChannel().transferTo(done, chunk,
-                    dataFileRandomAccess.getChannel());
-            todo -= chunk;
-            done += chunk;
-        }
-
-        tempHashTableFile.close();
-        (new File(tempHashTableFileName)).delete();
+                bucketCounts, dataFileRandomAccess);
 
         ByteBuffer slotTable = getBucketPositionTable(bucketOffsets,
                 this.bucketCounts, pos);
@@ -299,17 +273,6 @@ public final class HashFileBuilder {
      */
     private static String getRadixFileName(String radixFilePrefix, int i) {
         return String.format("%s%02X", radixFilePrefix, i);
-    }
-
-    /**
-     * Returns the hash list file corresponding to index i.
-     */
-    private static RandomAccessFile getRadixFile(String radixFilePrefix, int i)
-            throws FileNotFoundException {
-        String radixFileName = getRadixFileName(radixFilePrefix, i);
-        RandomAccessFile radixFile = new RandomAccessFile(radixFileName, "r");
-
-        return radixFile;
     }
 
     /**
