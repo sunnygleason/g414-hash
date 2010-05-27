@@ -32,12 +32,12 @@ public class FilterState implements Serializable {
     private final String hashName;
 
     /** BitSet containing bloom state */
-    private final BitSet state;
+    private final BitSet[] state;
 
     /** maxSize of bloom filter */
-    private final int maxSize;
+    private final long maxSize;
 
-    /** size of bit set */
+    /** size of each component bit set */
     private final int bitSetLength;
 
     /** number of hash functions per get/put operation */
@@ -52,7 +52,7 @@ public class FilterState implements Serializable {
      * @param maxSize
      * @param k
      */
-    public FilterState(String hashName, BitSet state, int maxSize,
+    public FilterState(String hashName, BitSet[] state, long maxSize,
             int bitSetLength, int k) {
         this.hashName = hashName;
         this.state = state;
@@ -67,16 +67,16 @@ public class FilterState implements Serializable {
     }
 
     /** @return BitSet filter state */
-    public BitSet getState() {
+    public BitSet[] getState() {
         return state;
     }
 
     /** @return int max items in filter */
-    public int getMaxSize() {
+    public long getMaxSize() {
         return maxSize;
     }
 
-    /** @return length of bit set */
+    /** @return length of each bit set */
     public int getBitSetLength() {
         return bitSetLength;
     }

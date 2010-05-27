@@ -22,9 +22,16 @@ import java.util.BitSet;
 import com.g414.hash.LongHash;
 
 /**
- * Bloom Filter implementation using a pluggable LongHash method.
+ * Large Bloom Filter implementation using a pluggable LongHash method. Uses 128
+ * bitsets under the hood to allow theoretical scaling up to 256 GB of bits.
  */
 public class BloomFilter {
+    /** number of bitsets to employ */
+    private static final int NUM_BITSETS = 128;
+
+    /** radix mask for determining bitset (most significant byte of int) */
+    private static final int BITSET_RADIX_MASK = 0x7F000000;
+
     /**
      * Factor to determine optimal number of hashes expressed in bits per item;
      * (0.7 * m / n )
@@ -37,12 +44,12 @@ public class BloomFilter {
     private static final FilterMethods util = new FilterMethods();
 
     /** BitSet containing Bloom Filter state */
-    private BitSet bitSet;
+    private BitSet[] bitSet;
 
     /** Maximum size of this Bloom Filter (not enforced) */
-    private final int maxSize;
+    private final long maxSize;
 
-    /** Maximum size of this Bloom Filter (not enforced) */
+    /** size of each individual bitset */
     private final int bitSetLength;
 
     /** Number of hash functions used per get/set */
@@ -59,31 +66,33 @@ public class BloomFilter {
      * @param maxSize
      * @param bitsPerItem
      */
-    public BloomFilter(LongHash hash, int maxSize, int bitsPerItem) {
+    public BloomFilter(LongHash hash, long maxSize, int bitsPerItem) {
         this.hash = hash;
-        this.maxSize = maxSize;
-        this.bitSetLength = this.maxSize * bitsPerItem;
         this.k = (int) Math.ceil(K_FACTOR * (double) (bitsPerItem));
-        this.bitSet = new BitSet(bitSetLength);
+        this.maxSize = maxSize;
+        this.bitSet = new BitSet[NUM_BITSETS];
+        this.bitSetLength = (int) ((this.maxSize * bitsPerItem) / NUM_BITSETS);
+
+        for (int i = 0; i < NUM_BITSETS; i++) {
+            this.bitSet[i] = new BitSet(this.bitSetLength);
+        }
     }
 
     /**
-     * Construct a new Bloom Filter using the specified Hash implementation and
-     * predefined FilterState.
+     * Construct a new Bloom Filter using the specified FilterState.
      * 
-     * @param hash
-     * @param maxSize
-     * @param bitsPerItem
+     * @param state
      */
-    public BloomFilter(LongHash hash, FilterState state) {
-        if (!hash.getName().equals(state.getHashName())) {
+    public BloomFilter(FilterState state) {
+        try {
+            this.hash = (LongHash) Class.forName(state.getHashName())
+                    .newInstance();
+        } catch (Exception e) {
             throw new IllegalArgumentException(
-                    "Incompatible hash implementations: (" + hash.getName()
-                            + " provided, " + state.getHashName()
-                            + " expected)");
+                    "Error while instantiating hash: (" + state.getHashName()
+                            + ")");
         }
 
-        this.hash = hash;
         this.bitSet = state.getState();
         this.maxSize = state.getMaxSize();
         this.bitSetLength = state.getBitSetLength();
@@ -99,7 +108,8 @@ public class BloomFilter {
         long[] hashIndex = hash.getLongHashCodes(object, this.k);
 
         for (long code : hashIndex) {
-            this.bitSet.set(util.normalizeLong(code, this.bitSetLength));
+            int radix = util.computeRadix(code, BITSET_RADIX_MASK);
+            this.bitSet[radix].set(util.normalizeLong(code, this.bitSetLength));
         }
     }
 
@@ -112,7 +122,8 @@ public class BloomFilter {
         long[] hashIndex = hash.getLongHashCodes(object, this.k);
 
         for (long code : hashIndex) {
-            if (!bitSet.get(util.normalizeLong(code, this.bitSetLength))) {
+            int radix = util.computeRadix(code, BITSET_RADIX_MASK);
+            if (!bitSet[radix].get(util.normalizeLong(code, this.bitSetLength))) {
                 return false;
             }
         }
@@ -121,26 +132,30 @@ public class BloomFilter {
     }
 
     /**
-     * Merges two compatible bloom filters.
+     * Adds the contents of the specified bloom filter into this bloom filter.
      * 
      * @param other
      */
-    public void union(BloomFilter other) {
+    public void putAll(BloomFilter other) {
         if ((this.k != other.k) || (this.maxSize != other.maxSize)
                 || (!this.hash.getName().equals(other.hash.getName()))) {
             throw new IllegalArgumentException("Incompatible Bloom Filters");
         }
 
-        this.bitSet.or(other.bitSet);
+        for (int i = 0; i < NUM_BITSETS; i++) {
+            this.bitSet[i].or(other.bitSet[i]);
+        }
     }
 
     /**
-     * Returns the internal Bloom State (for serialization, presumably).
+     * Returns the internal Bloom State (for serialization, presumably). NOTE:
+     * external synchronization must be provided to protect against concurrent
+     * writes during serialization.
      * 
      * @return
      */
     public FilterState getState() {
-        return new FilterState(this.hash.getName(), (BitSet) this.bitSet
-                .clone(), this.maxSize, this.bitSetLength, this.k);
+        return new FilterState(this.hash.getName(), this.bitSet, this.maxSize,
+                this.bitSetLength, this.k);
     }
 }

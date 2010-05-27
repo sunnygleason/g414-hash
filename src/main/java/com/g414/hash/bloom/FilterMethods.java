@@ -24,4 +24,8 @@ public class FilterMethods {
     public int normalizeLong(long code, int size) {
         return Math.abs((int) ((long) code % (long) size));
     }
+
+    public int computeRadix(long code, int bitMask) {
+        return (int) ((code & bitMask) >> 24) & 0xFF;
+    }
 }

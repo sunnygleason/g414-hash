@@ -21,7 +21,6 @@ import junit.framework.Assert;
 
 import org.testng.annotations.Test;
 
-import com.g414.hash.impl.cur.JenkinsHash_vA5E5;
 import com.g414.hash.impl.cur.MurmurHash_vA5E5;
 
 @Test
@@ -32,29 +31,34 @@ public class BloomPersistenceTest {
         bloom1.put("world");
 
         FilterState state = bloom1.getState();
-        bloom1.put("not_included");
 
-        BloomFilter bloom2 = new BloomFilter(new MurmurHash_vA5E5(), state);
+        BloomFilter bloom2 = new BloomFilter(state);
         Assert.assertTrue(bloom2.contains("hello"));
         Assert.assertTrue(bloom2.contains("world"));
-        Assert.assertTrue(!bloom2.contains("not_included"));
 
         try {
-            new BloomFilter(new JenkinsHash_vA5E5(), state);
+            FilterState badState = new FilterState("bogus hash", state
+                    .getState(), state.getMaxSize(), state.getBitSetLength(),
+                    state.getK());
+            new BloomFilter(badState);
 
             throw new RuntimeException("unexpected success");
         } catch (IllegalArgumentException expected) {
             // good - expected
         }
 
-        bloom2.put("this is a test");
+        BloomFilter bloom3 = new BloomFilter(new MurmurHash_vA5E5(), 1000, 8);
+        bloom3.put("this is a test");
 
-        bloom1.union(bloom2);
+        bloom1.putAll(bloom3);
 
         Assert.assertTrue(bloom1.contains("hello"));
         Assert.assertTrue(bloom1.contains("world"));
-        Assert.assertTrue(bloom1.contains("not_included"));
+        Assert.assertTrue(bloom2.contains("hello"));
+        Assert.assertTrue(!bloom3.contains("hello"));
         Assert.assertTrue(bloom1.contains("this is a test"));
+        Assert.assertTrue(bloom2.contains("this is a test"));
+        Assert.assertTrue(bloom3.contains("this is a test"));
         Assert.assertTrue(!bloom1.contains("probably not"));
     }
 }
