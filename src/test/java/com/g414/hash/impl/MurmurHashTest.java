@@ -18,11 +18,11 @@
 package com.g414.hash.impl;
 
 import com.g414.hash.LongHash;
-import com.g414.hash.impl.Sha1PrngHash;
+import com.g414.hash.impl.MurmurHash;
 
-public class Sha1PrngHash_v9ABA_Test extends HashImplTestBase {
+public class MurmurHashTest extends HashImplTestBase {
     @Override
     public LongHash getHash() {
-        return new Sha1PrngHash();
+        return new MurmurHash();
     }
 }

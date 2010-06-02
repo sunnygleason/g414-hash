@@ -18,11 +18,11 @@
 package com.g414.hash.impl;
 
 import com.g414.hash.LongHash;
-import com.g414.hash.impl.MurmurHash;
+import com.g414.hash.impl.JenkinsHash;
 
-public class MurmurHash_vA5E5_Test extends HashImplTestBase {
+public class JenkinsHashTest extends HashImplTestBase {
     @Override
     public LongHash getHash() {
-        return new MurmurHash();
+        return new JenkinsHash();
     }
 }

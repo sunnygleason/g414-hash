@@ -18,11 +18,11 @@
 package com.g414.hash.impl;
 
 import com.g414.hash.LongHash;
-import com.g414.hash.impl.JenkinsHash;
+import com.g414.hash.impl.Sha1PrngHash;
 
-public class JenkinsHash_vA5E5_Test extends HashImplTestBase {
+public class Sha1PrngHashTest extends HashImplTestBase {
     @Override
     public LongHash getHash() {
-        return new JenkinsHash();
+        return new Sha1PrngHash();
     }
 }
