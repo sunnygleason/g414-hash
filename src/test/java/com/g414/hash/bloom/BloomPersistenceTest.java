@@ -21,12 +21,12 @@ import junit.framework.Assert;
 
 import org.testng.annotations.Test;
 
-import com.g414.hash.impl.cur.MurmurHash_vA5E5;
+import com.g414.hash.impl.MurmurHash;
 
 @Test
 public class BloomPersistenceTest {
     public void testBloomPersist() {
-        BloomFilter bloom1 = new BloomFilter(new MurmurHash_vA5E5(), 1000, 8);
+        BloomFilter bloom1 = new BloomFilter(new MurmurHash(), 1000, 8);
         bloom1.put("hello");
         bloom1.put("world");
 
@@ -39,7 +39,7 @@ public class BloomPersistenceTest {
         try {
             FilterState badState = new FilterState("bogus hash", state
                     .getState(), state.getMaxSize(), state.getBitSetLength(),
-                    state.getK());
+                    state.getK(), true);
             new BloomFilter(badState);
 
             throw new RuntimeException("unexpected success");
@@ -47,7 +47,7 @@ public class BloomPersistenceTest {
             // good - expected
         }
 
-        BloomFilter bloom3 = new BloomFilter(new MurmurHash_vA5E5(), 1000, 8);
+        BloomFilter bloom3 = new BloomFilter(new MurmurHash(), 1000, 8);
         bloom3.put("this is a test");
 
         bloom1.putAll(bloom3);

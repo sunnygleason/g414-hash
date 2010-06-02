@@ -18,11 +18,11 @@
 package com.g414.hash.impl;
 
 import com.g414.hash.LongHash;
-import com.g414.hash.impl.cur.MurmurHash_vA5E5;
+import com.g414.hash.impl.MurmurHash;
 
 public class MurmurHash_vA5E5_Test extends HashImplTestBase {
     @Override
     public LongHash getHash() {
-        return new MurmurHash_vA5E5();
+        return new MurmurHash();
     }
 }

@@ -21,6 +21,16 @@ package com.g414.hash;
  * Utility methods for nifty hash implementations.
  */
 public class LongHashMethods {
+    /** rotate a long by the specified number of bits */
+    public static final long rotateLong(long val, int bits) {
+        return (val >> bits) | (val << (64 - bits));
+    }
+
+    /** rotate a long by the specified number of bits */
+    public static final int rotateInt(int val, int bits) {
+        return (val >> bits) | (val << (32 - bits));
+    }
+
     /** take a bunch of random bytes and turn them into a single long */
     public static final long condenseBytesIntoLong(byte[] representation) {
         long seed = 0L;
@@ -30,6 +40,20 @@ public class LongHashMethods {
             long bLong = ((long) b) << (pos * 8);
             seed ^= bLong;
             pos = (pos + 1) % 8;
+        }
+
+        return seed;
+    }
+
+    /** take a bunch of random bytes and turn them into a single int */
+    public static final int condenseBytesIntoInt(byte[] representation) {
+        int seed = 0;
+        int pos = 0;
+
+        for (byte b : representation) {
+            long bLong = ((long) b) << (pos * 8);
+            seed ^= bLong;
+            pos = (pos + 1) % 4;
         }
 
         return seed;

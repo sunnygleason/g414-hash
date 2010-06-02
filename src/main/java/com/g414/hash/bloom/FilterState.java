@@ -43,6 +43,9 @@ public class FilterState implements Serializable {
     /** number of hash functions per get/put operation */
     private final int k;
 
+    /** whether to use long or int hash */
+    private final boolean longHash;
+    
     /**
      * Construct a new filter state object using the specified hash name,
      * bitset, maxSize and k value.
@@ -53,12 +56,13 @@ public class FilterState implements Serializable {
      * @param k
      */
     public FilterState(String hashName, BitSet[] state, long maxSize,
-            int bitSetLength, int k) {
+            int bitSetLength, int k, boolean longHash) {
         this.hashName = hashName;
         this.state = state;
         this.maxSize = maxSize;
         this.bitSetLength = bitSetLength;
         this.k = k;
+        this.longHash = longHash;
     }
 
     /** @return String hash name */
@@ -84,5 +88,10 @@ public class FilterState implements Serializable {
     /** @return int k number of hash values used */
     public int getK() {
         return k;
+    }
+    
+    /** @return true if long hash, false otherwise */
+    public boolean isLongHash() {
+        return longHash;
     }
 }

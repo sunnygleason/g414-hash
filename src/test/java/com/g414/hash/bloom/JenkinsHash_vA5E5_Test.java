@@ -17,12 +17,15 @@
  */
 package com.g414.hash.bloom;
 
-import com.g414.hash.LongHash;
-import com.g414.hash.impl.cur.JenkinsHash_vA5E5;
+import org.testng.annotations.Test;
 
+import com.g414.hash.LongHash;
+import com.g414.hash.impl.JenkinsHash;
+
+@Test
 public class JenkinsHash_vA5E5_Test extends BloomFilterTestBase {
     @Override
     public LongHash getHash() {
-        return new JenkinsHash_vA5E5();
+        return new JenkinsHash();
     }
 }

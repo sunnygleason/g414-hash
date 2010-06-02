@@ -17,7 +17,7 @@
  */
 package com.g414.hash.file.impl;
 
-import com.g414.hash.impl.cur.MurmurHash_vA5E5;
+import com.g414.hash.impl.MurmurHash;
 
 /**
  * Encapsulates calculations related to HashFiles.
@@ -39,13 +39,18 @@ public class Calculations {
     public static final int RADIX_FILE_COUNT = (1 << RADIX_FILE_COUNT_POWER_OF_2);
 
     /** our trusty hash function */
-    private static final MurmurHash_vA5E5 hash = new MurmurHash_vA5E5();
+    private static final MurmurHash hash = new MurmurHash();
 
-    /** Computes the hash value of a given byte[] key */
-    public static long computeHash(byte[] key) {
-        return hash.computeMurmurHash(key, 0L);
+    /** Computes the long hash value of a given byte[] key */
+    public static long computeLongHash(byte[] key) {
+        return hash.computeMurmurLongHash(key, 0L);
     }
 
+    /** Computes the int hash value of a given byte[] key */
+    public static int computeIntHash(byte[] key) {
+        return hash.computeMurmurIntHash(key, 0);
+    }
+    
     /**
      * Returns the power-of-two number of buckets recommended for the specified
      * number of elements. If the specified number of elements is zero or less,

@@ -17,12 +17,15 @@
  */
 package com.g414.hash.bloom;
 
-import com.g414.hash.LongHash;
-import com.g414.hash.impl.cur.Sha1PrngHash_v9ABA;
+import org.testng.annotations.Test;
 
+import com.g414.hash.LongHash;
+import com.g414.hash.impl.Sha1PrngHash;
+
+@Test
 public class Sha1PrngHash_v9ABA_Test extends BloomFilterTestBase {
     @Override
     public LongHash getHash() {
-        return new Sha1PrngHash_v9ABA();
+        return new Sha1PrngHash();
     }
 }

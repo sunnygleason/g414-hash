@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.g414.hash.impl.cur;
+package com.g414.hash.impl;
 
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
@@ -30,7 +30,7 @@ import com.g414.hash.LongHashMethods;
  * LongHash implementation that uses SHA1 Message Digest and PRNG to generate
  * hash codes. Pretty trusty. Version 2009-11-15T22:00.
  */
-public class Sha1PrngHash_v9ABA implements LongHash {
+public class Sha1PrngHash implements LongHash {
     /** @see LongHash#getName() */
     @Override
     public String getName() {
@@ -49,6 +49,7 @@ public class Sha1PrngHash_v9ABA implements LongHash {
         }
     }
 
+    /** @see LongHash#getLongHashCode(byte[]) */
     @Override
     public long getLongHashCode(byte[] data) {
         byte[] signature = getDigest(data);
@@ -63,19 +64,70 @@ public class Sha1PrngHash_v9ABA implements LongHash {
             throw new IllegalArgumentException("k must be >= 1");
         }
 
-        byte[] signature = getDigest(object.getBytes());
-        long seed = LongHashMethods.condenseBytesIntoLong(signature);
+        try {
+            byte[] signature = getDigest(object.getBytes("UTF-8"));
+            long seed = LongHashMethods.condenseBytesIntoLong(signature);
 
-        Random random = getRandom(seed);
+            Random random = getRandom(seed);
 
-        long[] hashCodes = new long[k];
-        hashCodes[0] = seed;
+            long[] hashCodes = new long[k];
+            hashCodes[0] = seed;
 
-        for (int i = 1; i < k; i++) {
-            hashCodes[i] = random.nextLong();
+            for (int i = 1; i < k; i++) {
+                hashCodes[i] = random.nextLong();
+            }
+
+            return hashCodes;
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException("Java doesn't recognize UTF-8?!");
+        }
+    }
+
+    /** @see LongHash#getIntHashCode(String) */
+    @Override
+    public int getIntHashCode(String object) {
+        try {
+            byte[] signature = getDigest(object.getBytes("UTF-8"));
+
+            return LongHashMethods.condenseBytesIntoInt(signature);
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException("Java doesn't recognize UTF-8?!");
+        }
+    }
+
+    /** @see LongHash#getIntHashCode(byte[]) */
+    @Override
+    public int getIntHashCode(byte[] data) {
+        byte[] signature = getDigest(data);
+
+        return LongHashMethods.condenseBytesIntoInt(signature);
+    }
+
+    /** @see LongHash#getIntHashCodes(String, int) */
+    @Override
+    public int[] getIntHashCodes(String object, int k) {
+        if (k < 1) {
+            throw new IllegalArgumentException("k must be >= 1");
         }
 
-        return hashCodes;
+        try {
+            byte[] signature = getDigest(object.getBytes("UTF-8"));
+            long seed = LongHashMethods.condenseBytesIntoLong(signature);
+
+            Random random = getRandom(seed);
+
+            int[] hashCodes = new int[k];
+            hashCodes[0] = (int) ((seed >> 32) & 0xFFFFFFFF)
+                    | ((int) (seed & 0xFFFFFFFF));
+
+            for (int i = 1; i < k; i++) {
+                hashCodes[i] = random.nextInt();
+            }
+
+            return hashCodes;
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException("Java doesn't recognize UTF-8?!");
+        }
     }
 
     /** returns the message digest of the given object bytes */

@@ -141,7 +141,7 @@ public final class HashFileBuilder {
         this.dataFile.write(key);
         this.dataFile.write(data);
 
-        long hashValue = Calculations.computeHash(key);
+        long hashValue = Calculations.computeLongHash(key);
         int radix = Calculations.getRadix(hashValue, this.bucketPower);
         int bucket = Calculations.getBucket(hashValue, this.bucketPower);
 

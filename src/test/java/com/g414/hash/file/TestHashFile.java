@@ -8,10 +8,10 @@ import java.util.Random;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.g414.hash.impl.prev.MurmurHash_v9ABA;
+import com.g414.hash.impl.MurmurHash;
 
 public class TestHashFile {
-    MurmurHash_v9ABA hash = new MurmurHash_v9ABA();
+    MurmurHash hash = new MurmurHash();
 
     @Test
     public void testEmptyHashFile() throws Exception {

@@ -17,12 +17,15 @@
  */
 package com.g414.hash.bloom;
 
-import com.g414.hash.LongHash;
-import com.g414.hash.impl.cur.MurmurHash_vA5E5;
+import org.testng.annotations.Test;
 
+import com.g414.hash.LongHash;
+import com.g414.hash.impl.MurmurHash;
+
+@Test
 public class MurmurHash_vA5E5_Test extends BloomFilterTestBase {
     @Override
     public LongHash getHash() {
-        return new MurmurHash_vA5E5();
+        return new MurmurHash();
     }
 }

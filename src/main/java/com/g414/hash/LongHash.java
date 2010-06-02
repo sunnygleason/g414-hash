@@ -25,11 +25,21 @@ public interface LongHash {
     /** returns the String name identifying this hash code implementation */
     public String getName();
 
-    /** returns the order-zero hash code for the given object */
+    /** returns the order-zero long hash code for the given object */
     public long getLongHashCode(String object);
 
+    /** returns the order-zero long hash code for the given object */
     public long getLongHashCode(byte[] data);
-    
-    /** returns an array of the first k hash codes for the given object */
+
+    /** returns an array of the first k long hash codes for the given object */
     public long[] getLongHashCodes(String object, int k);
+
+    /** returns the order-zero integer hash code for the given object */
+    public int getIntHashCode(String object);
+
+    /** returns the order-zero integer hash code for the given object */
+    public int getIntHashCode(byte[] data);
+
+    /** returns an array of the first k int hash codes for the given object */
+    public int[] getIntHashCodes(String object, int k);
 }

@@ -148,7 +148,7 @@ public class HashFile {
                     "get() not allowed when HashFile is closed()");
         }
 
-        long currentHashKey = Calculations.computeHash(key);
+        long currentHashKey = Calculations.computeLongHash(key);
 
         int slot = Calculations.getBucket(currentHashKey,
                 HashFile.this.bucketPower) * 2;
@@ -258,7 +258,7 @@ public class HashFile {
                     "get() not allowed when HashFile is closed()");
         }
 
-        long currentHashKey = Calculations.computeHash(key);
+        long currentHashKey = Calculations.computeLongHash(key);
 
         int slot = Calculations.getBucket(currentHashKey,
                 HashFile.this.bucketPower) * 2;

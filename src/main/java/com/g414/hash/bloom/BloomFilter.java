@@ -58,6 +58,8 @@ public class BloomFilter {
     /** LongHash implementation */
     private final LongHash hash;
 
+    private final boolean longHash;
+
     /**
      * Construct a new Bloom Filter using the specified Hash implementation,
      * maximum size (in # of elements inserted), and bits per item.
@@ -65,8 +67,10 @@ public class BloomFilter {
      * @param hash
      * @param maxSize
      * @param bitsPerItem
+     * @param longHash
      */
-    public BloomFilter(LongHash hash, long maxSize, int bitsPerItem) {
+    public BloomFilter(LongHash hash, long maxSize, int bitsPerItem,
+            boolean longHash) {
         this.hash = hash;
         this.k = (int) Math.ceil(K_FACTOR * (double) (bitsPerItem));
         this.maxSize = maxSize;
@@ -76,6 +80,12 @@ public class BloomFilter {
         for (int i = 0; i < NUM_BITSETS; i++) {
             this.bitSet[i] = new BitSet(this.bitSetLength);
         }
+
+        this.longHash = longHash;
+    }
+
+    public BloomFilter(LongHash hash, long maxSize, int bitsPerItem) {
+        this(hash, maxSize, bitsPerItem, true);
     }
 
     /**
@@ -97,6 +107,7 @@ public class BloomFilter {
         this.maxSize = state.getMaxSize();
         this.bitSetLength = state.getBitSetLength();
         this.k = state.getK();
+        this.longHash = state.isLongHash();
     }
 
     /**
@@ -105,11 +116,22 @@ public class BloomFilter {
      * @param object
      */
     public void put(String object) {
-        long[] hashIndex = hash.getLongHashCodes(object, this.k);
+        if (this.longHash) {
+            long[] hashIndex = hash.getLongHashCodes(object, this.k);
 
-        for (long code : hashIndex) {
-            int radix = util.computeRadix(code, BITSET_RADIX_MASK);
-            this.bitSet[radix].set(util.normalizeLong(code, this.bitSetLength));
+            for (long code : hashIndex) {
+                int radix = util.computeRadix(code, BITSET_RADIX_MASK);
+                this.bitSet[radix].set(util.normalizeLong(code,
+                        this.bitSetLength));
+            }
+        } else {
+            int[] hashIndex = hash.getIntHashCodes(object, this.k);
+
+            for (int code : hashIndex) {
+                int radix = util.computeRadix(code, BITSET_RADIX_MASK);
+                this.bitSet[radix].set(util.normalizeInt(code,
+                        this.bitSetLength));
+            }
         }
     }
 
@@ -119,12 +141,25 @@ public class BloomFilter {
      * @param object
      */
     public boolean contains(String object) {
-        long[] hashIndex = hash.getLongHashCodes(object, this.k);
+        if (this.longHash) {
+            long[] hashIndex = hash.getLongHashCodes(object, this.k);
 
-        for (long code : hashIndex) {
-            int radix = util.computeRadix(code, BITSET_RADIX_MASK);
-            if (!bitSet[radix].get(util.normalizeLong(code, this.bitSetLength))) {
-                return false;
+            for (long code : hashIndex) {
+                int radix = util.computeRadix(code, BITSET_RADIX_MASK);
+                if (!bitSet[radix].get(util.normalizeLong(code,
+                        this.bitSetLength))) {
+                    return false;
+                }
+            }
+        } else {
+            int[] hashIndex = hash.getIntHashCodes(object, this.k);
+
+            for (int code : hashIndex) {
+                int radix = util.computeRadix(code, BITSET_RADIX_MASK);
+                if (!bitSet[radix].get(util.normalizeInt(code,
+                        this.bitSetLength))) {
+                    return false;
+                }
             }
         }
 
@@ -156,6 +191,6 @@ public class BloomFilter {
      */
     public FilterState getState() {
         return new FilterState(this.hash.getName(), this.bitSet, this.maxSize,
-                this.bitSetLength, this.k);
+                this.bitSetLength, this.k, this.longHash);
     }
 }
