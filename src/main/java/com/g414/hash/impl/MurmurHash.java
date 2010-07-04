@@ -48,6 +48,12 @@ public class MurmurHash implements LongHash {
     private final static int R1_INT = 13;
     private final static int R2_INT = 15;
 
+    /** @see LongHash#getMagic() */
+    @Override
+    public byte[] getMagic() {
+        return "__MRMR__".getBytes();
+    }
+
     /** @see LongHash#getName() */
     @Override
     public String getName() {
@@ -96,11 +102,11 @@ public class MurmurHash implements LongHash {
         try {
             long[] hashCodes = new long[k];
             byte[] representation = object.getBytes("UTF-8");
-    
+
             for (int i = 0; i < k; i++) {
                 hashCodes[i] = computeMurmurLongHash(representation, i);
             }
-    
+
             return hashCodes;
         } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException("Java doesn't recognize UTF-8?!");
@@ -121,7 +127,7 @@ public class MurmurHash implements LongHash {
             for (int i = 0; i < k; i++) {
                 hashCodes[i] = computeMurmurIntHash(representation, i);
             }
-    
+
             return hashCodes;
         } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException("Java doesn't recognize UTF-8?!");

@@ -31,6 +31,12 @@ import com.g414.hash.LongHashMethods;
  * hash codes. Pretty trusty. Version 2009-11-15T22:00.
  */
 public class Sha1PrngHash implements LongHash {
+    /** @see LongHash#getMagic() */
+    @Override
+    public byte[] getMagic() {
+        return "__SHA1__".getBytes();
+    }
+
     /** @see LongHash#getName() */
     @Override
     public String getName() {

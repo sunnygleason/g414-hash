@@ -22,6 +22,9 @@ package com.g414.hash;
  * for Bloom Filter and other nifty use cases.
  */
 public interface LongHash {
+    /** returns an 8-byte magic number representing the hash */
+    public byte[] getMagic();
+
     /** returns the String name identifying this hash code implementation */
     public String getName();
 
