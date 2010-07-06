@@ -45,6 +45,7 @@ public class MurmurHash implements LongHash {
     private final static long M_LONG = 0xc6a4a7935bd1e995L;
     private final static int R_LONG = 47;
     private final static int M_INT = 0x5bd1e995;
+    private final static int R_INT = 24;
     private final static int R1_INT = 13;
     private final static int R2_INT = 15;
 
@@ -152,8 +153,9 @@ public class MurmurHash implements LongHash {
             k *= M_LONG;
             k ^= k >> R_LONG;
             k *= M_LONG;
-            h *= M_LONG;
+
             h ^= k;
+            h *= M_LONG;
         }
 
         if (i < len) {
@@ -184,8 +186,9 @@ public class MurmurHash implements LongHash {
             int k = gatherIntLE(data, i);
 
             k *= M_INT;
-            k ^= k >> R1_INT;
+            k ^= k >> R_INT;
             k *= M_INT;
+
             h *= M_INT;
             h ^= k;
         }
