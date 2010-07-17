@@ -15,17 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.g414.hash.bloom;
+package com.g414.hash.impl;
 
 import org.testng.annotations.Test;
 
 import com.g414.hash.LongHash;
-import com.g414.hash.impl.JenkinsHash;
 
 @Test
-public class JenkinsHash_vA5E5_Test extends BloomFilterTestBase {
+public class HsiehSuperFastHashTest extends HashImplTestBase {
     @Override
     public LongHash getHash() {
-        return new JenkinsHash();
+        return new HsiehSuperFastHash();
     }
 }

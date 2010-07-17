@@ -20,12 +20,12 @@ package com.g414.hash.bloom;
 import org.testng.annotations.Test;
 
 import com.g414.hash.LongHash;
-import com.g414.hash.impl.MurmurHash;
+import com.g414.hash.impl.Fnv1Hash;
 
 @Test
-public class MurmurHash_vA5E5_Test extends BloomFilterTestBase {
+public class Fnv1HashTest extends BloomFilterTestBase {
     @Override
     public LongHash getHash() {
-        return new MurmurHash();
+        return new Fnv1Hash();
     }
 }

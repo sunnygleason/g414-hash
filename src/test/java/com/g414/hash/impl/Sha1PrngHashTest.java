@@ -17,9 +17,12 @@
  */
 package com.g414.hash.impl;
 
+import org.testng.annotations.Test;
+
 import com.g414.hash.LongHash;
 import com.g414.hash.impl.Sha1PrngHash;
 
+@Test
 public class Sha1PrngHashTest extends HashImplTestBase {
     @Override
     public LongHash getHash() {

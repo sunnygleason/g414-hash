@@ -20,12 +20,12 @@ package com.g414.hash.bloom;
 import org.testng.annotations.Test;
 
 import com.g414.hash.LongHash;
-import com.g414.hash.impl.Sha1PrngHash;
+import com.g414.hash.impl.HsiehSuperFastHash;
 
 @Test
-public class Sha1PrngHash_v9ABA_Test extends BloomFilterTestBase {
+public class HsiehSuperFastHashTest extends BloomFilterTestBase {
     @Override
     public LongHash getHash() {
-        return new Sha1PrngHash();
+        return new HsiehSuperFastHash();
     }
 }

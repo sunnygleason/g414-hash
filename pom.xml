@@ -8,6 +8,12 @@
 
   <dependencies>
     <dependency>
+      <groupId>com.sun.faban</groupId>
+      <artifactId>xfaban</artifactId>
+      <version>1.0.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.testng</groupId>
       <artifactId>testng</artifactId>
       <version>5.11</version>

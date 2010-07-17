@@ -175,7 +175,7 @@ public class Fnv1Hash implements LongHash {
         final int len = data.length;
         long hVal = seed;
 
-        for (int i = 0; i <= len; i++) {
+        for (int i = 0; i < len; i++) {
             hVal *= FNV_64_PRIME;
             hVal ^= data[i];
         }
@@ -194,7 +194,7 @@ public class Fnv1Hash implements LongHash {
         final int len = data.length;
         int hVal = seed;
 
-        for (int i = 0; i <= len; i++) {
+        for (int i = 0; i < len; i++) {
             hVal *= FNV_32_PRIME;
             hVal ^= data[i];
         }

@@ -17,6 +17,8 @@
  */
 package com.g414.hash;
 
+import java.math.BigInteger;
+
 /**
  * Utility methods for nifty hash implementations.
  */
@@ -128,5 +130,35 @@ public class LongHashMethods {
         }
 
         return i;
+    }
+
+    /**
+     * Multiply a 128-bit value by a long. FIXME: need to verify!
+     */
+    public static final void multiply128_optimized(long a, long b, long[] dest) {
+        long a1 = a >> 32;
+        long a2 = a & 0x00000000FFFFFFFFL;
+        long b1 = b >> 32;
+        long b2 = b & 0x00000000FFFFFFFFL;
+
+        long r1 = a2 * b2;
+        long r2 = a1 * b2;
+        long r3 = a2 * b1;
+        long r4 = a1 * b1;
+
+        dest[1] = r1 + (int) r2 + (int) r3;
+        dest[0] = r4 + (int) (r2 >> 32) + (int) (r3 >> 32);
+    }
+
+    /**
+     * Multiply a 128-bit value by a long.
+     */
+    public static final void multiply128(long a, long b, long[] dest) {
+        BigInteger a1 = BigInteger.valueOf(a);
+        BigInteger b1 = BigInteger.valueOf(b);
+        BigInteger product = a1.multiply(b1);
+
+        dest[0] = product.shiftRight(64).longValue();
+        dest[1] = product.longValue();
     }
 }

@@ -20,12 +20,11 @@ package com.g414.hash.impl;
 import org.testng.annotations.Test;
 
 import com.g414.hash.LongHash;
-import com.g414.hash.impl.MurmurHash;
 
 @Test
-public class MurmurHashTest extends HashImplTestBase {
+public class Fnv1aHashTest extends HashImplTestBase {
     @Override
     public LongHash getHash() {
-        return new MurmurHash();
+        return new Fnv1aHash();
     }
 }

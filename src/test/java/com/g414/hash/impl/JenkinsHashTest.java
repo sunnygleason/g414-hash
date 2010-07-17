@@ -17,9 +17,12 @@
  */
 package com.g414.hash.impl;
 
+import org.testng.annotations.Test;
+
 import com.g414.hash.LongHash;
 import com.g414.hash.impl.JenkinsHash;
 
+@Test
 public class JenkinsHashTest extends HashImplTestBase {
     @Override
     public LongHash getHash() {

@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.g414.hash.impl;
+package com.g414.hash.bloom;
 
 import org.testng.annotations.Test;
 
 import com.g414.hash.LongHash;
-import com.g414.hash.impl.MurmurHash;
+import com.g414.hash.impl.Sha1PrngHash;
 
 @Test
-public class MurmurHashTest extends HashImplTestBase {
+public class Sha1PrngHashTest extends BloomFilterTestBase {
     @Override
     public LongHash getHash() {
-        return new MurmurHash();
+        return new Sha1PrngHash();
     }
 }
