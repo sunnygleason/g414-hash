@@ -29,7 +29,7 @@ public class HashDriver {
     @BenchmarkOperation(name = "Foo", max90th = 1000000, timing = MANUAL)
     @NegativeExponential(cycleType = THINKTIME, cycleMean = 0, cycleDeviation = 0.0)
     public void doFoo() {
-        byte[] value = new byte[8];
+        byte[] value = new byte[128];
         random.nextBytes(value);
 
         DriverContext.getContext().recordTime();

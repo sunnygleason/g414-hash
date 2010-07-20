@@ -17,6 +17,8 @@
  */
 package com.g414.hash.impl;
 
+import static com.g414.hash.LongHashMethods.LONG_LO_MASK;
+
 import java.io.UnsupportedEncodingException;
 
 import com.g414.hash.LongHash;
@@ -32,7 +34,12 @@ public class CWowHash implements LongHash {
     public final static int CWOW_32_N = 0x5052acdb;
 
     public final static long CWOW_64_M = 0x95b47aa3355ba1a1L;
+    public final static long CWOW_64_M_LO = CWOW_64_M & LONG_LO_MASK;
+    public final static long CWOW_64_M_HI = CWOW_64_M >>> 32;
+    
     public final static long CWOW_64_N = 0x8a970be7488fda55L;
+    public final static long CWOW_64_N_LO = CWOW_64_N & LONG_LO_MASK;
+    public final static long CWOW_64_N_HI = CWOW_64_N >>> 32;
 
     /** @see LongHash#getMagic() */
     @Override
@@ -127,7 +134,6 @@ public class CWowHash implements LongHash {
      */
     public long computeCWowLongHash(byte[] data, long seed) {
         final int length = data.length;
-
         /* cwfold( a, b, lo, hi ): */
         /* p = (u64)(a) * (u128)(b); lo ^=(u64)p; hi ^= (u64)(p >> 64) */
         /* cwmixa( in ): cwfold( in, m, k, h ) */
@@ -135,54 +141,80 @@ public class CWowHash implements LongHash {
 
         long hVal = seed;
         long k = length + seed + CWOW_64_N;
-        long[] p = new long[] { 0L, 0L };
 
         int pos = 0;
         int len = length;
 
+        long aL, aH, bL, bH;
+        long r1, r2, r3, rML;
+        long pL;
+        long pH;
+
         while (len >= 16) {
-            long i1 = LongHashMethods.gatherLongLE(data, pos);
-            long i2 = LongHashMethods.gatherLongLE(data, pos + 8);
+            /* cwmixb(X) = cwfold( X, N, hVal, k ) */
+            aL = LongHashMethods.gatherIntLE(data, pos) & LONG_LO_MASK; pos += 4;
+            aH = LongHashMethods.gatherIntLE(data, pos) & LONG_LO_MASK; pos += 4;
+            bL = CWOW_64_N_LO; bH = CWOW_64_N_HI;
+            r1 = aL * bL; r2 = aH * bL; r3 = aL * bH;
+            rML = (r1 >>> 32) + (r2 & LONG_LO_MASK) + (r3 & LONG_LO_MASK);
+            pL = (r1 & LONG_LO_MASK) + ((rML & LONG_LO_MASK) << 32);
+            pH = (aH * bH) + (rML >>> 32);
+            hVal ^= pL; k ^= pH;
 
-            /* cwmixb(i1) = cwfold( i1, N, hVal, k ) */
-            LongHashMethods.multiply128(i1, CWOW_64_N, p);
-            k ^= p[1];
-            hVal ^= p[0];
-            /* cwmixa(i2) = cwfold( i2, M, k, hVal ) */
-            LongHashMethods.multiply128(i2, CWOW_64_M, p);
-            hVal ^= p[1];
-            k ^= p[0];
+            /* cwmixa(Y) = cwfold( Y, M, k, hVal ) */
+            aL = LongHashMethods.gatherIntLE(data, pos) & LONG_LO_MASK; pos += 4;
+            aH = LongHashMethods.gatherIntLE(data, pos) & LONG_LO_MASK; pos += 4;
+            bL = CWOW_64_M_LO; bH = CWOW_64_M_HI;
+            r1 = aL * bL; r2 = aH * bL; r3 = aL * bH;
+            rML = (r1 >>> 32) + (r2 & LONG_LO_MASK) + (r3 & LONG_LO_MASK);
+            pL = (r1 & LONG_LO_MASK) + ((rML & LONG_LO_MASK) << 32);
+            pH = (aH * bH) + (rML >>> 32);
+            k ^= pL; hVal ^= pH;
 
-            pos += 16;
             len -= 16;
         }
 
         if (len >= 8) {
-            long i1 = LongHashMethods.gatherLongLE(data, pos);
+            /* cwmixb(X) = cwfold( X, N, hVal, k ) */
+            aL = LongHashMethods.gatherIntLE(data, pos) & LONG_LO_MASK; pos += 4;
+            aH = LongHashMethods.gatherIntLE(data, pos) & LONG_LO_MASK; pos += 4;
+            bL = CWOW_64_N_LO; bH = CWOW_64_N_HI;
+            r1 = aL * bL; r2 = aH * bL; r3 = aL * bH;
+            rML = (r1 >>> 32) + (r2 & LONG_LO_MASK) + (r3 & LONG_LO_MASK);
+            pL = (r1 & LONG_LO_MASK) + ((rML & LONG_LO_MASK) << 32);
+            pH = (aH * bH) + (rML >>> 32);
+            hVal ^= pL; k ^= pH;
 
-            /* cwmixb(i1) = cwfold( i1, N, hVal, k ) */
-            LongHashMethods.multiply128(i1, CWOW_64_N, p);
-            k ^= p[1];
-            hVal ^= p[0];
-
-            pos += 8;
             len -= 8;
         }
 
         if (len > 0) {
-            long i1 = LongHashMethods.gatherPartialLongLE(data, pos, len);
-
-            /* cwmixa(i1) = cwfold( i1, M, k, hVal ) */
-            LongHashMethods.multiply128((i1 & ((1 << (len * 8)) - 1)),
-                    CWOW_64_M, p);
-            hVal ^= p[1];
-            k ^= p[0];
+            aL = LongHashMethods.gatherPartialLongLE(data, pos, len);
+            aH = aL >> 32;
+            aL = aL & LONG_LO_MASK;
+            
+            /* cwmixa(Y) = cwfold( Y, M, k, hVal ) */
+            bL = CWOW_64_M_LO;
+            bH = CWOW_64_M_HI;
+            r1 = aL * bL; r2 = aH * bL; r3 = aL * bH;
+            rML = (r1 >>> 32) + (r2 & LONG_LO_MASK) + (r3 & LONG_LO_MASK);
+            pL = (r1 & LONG_LO_MASK) + ((rML & LONG_LO_MASK) << 32);
+            pH = (aH * bH) + (rML >>> 32);
+            k ^= pL; hVal ^= pH;
         }
 
-        /* cwmixb(i1) = cwfold( i1, N, hVal, k ) */
-        LongHashMethods.multiply128((hVal ^ (k + CWOW_64_N)), CWOW_64_N, p);
-        k ^= p[1];
-        hVal ^= p[0];
+        /* cwmixb(X) = cwfold( X, N, hVal, k ) */
+        aL = (hVal ^ (k + CWOW_64_N));
+        aH = aL >> 32;
+        aL = aL & LONG_LO_MASK;
+        
+        bL = CWOW_64_N_LO;
+        bH = CWOW_64_N_HI;
+        r1 = aL * bL; r2 = aH * bL; r3 = aL * bH;
+        rML = (r1 >>> 32) + (r2 & LONG_LO_MASK) + (r3 & LONG_LO_MASK);
+        pL = (r1 & LONG_LO_MASK) + ((rML & LONG_LO_MASK) << 32);
+        pH = (aH * bH) + (rML >>> 32);
+        hVal ^= pL; k ^= pH;
 
         hVal ^= k;
 
@@ -213,11 +245,11 @@ public class CWowHash implements LongHash {
 
             /* cwmixb(i1) = cwfold( i1, N, hVal, k ) */
             p = i1 * (long) CWOW_32_N;
-            k ^= p;
+            k ^= p & LONG_LO_MASK;
             hVal ^= (p >> 32);
             /* cwmixa(i2) = cwfold( i2, M, k, hVal ) */
             p = i2 * (long) CWOW_32_M;
-            hVal ^= p;
+            hVal ^= p & LONG_LO_MASK;
             k ^= (p >> 32);
 
             pos += 8;
@@ -229,7 +261,7 @@ public class CWowHash implements LongHash {
 
             /* cwmixb(i1) = cwfold( i1, N, hVal, k ) */
             p = i1 * (long) CWOW_32_N;
-            k ^= p;
+            k ^= p & LONG_LO_MASK;
             hVal ^= (p >> 32);
 
             pos += 4;
@@ -241,12 +273,12 @@ public class CWowHash implements LongHash {
 
             /* cwmixb(i1) = cwfold( i1, N, hVal, k ) */
             p = (i1 & ((1 << (len * 8)) - 1)) * (long) CWOW_32_M;
-            hVal ^= p;
+            hVal ^= p & LONG_LO_MASK;
             k ^= (p >> 32);
         }
 
         p = (hVal ^ (k + CWOW_32_N)) * (long) CWOW_32_N;
-        k ^= p;
+        k ^= p & LONG_LO_MASK;
         hVal ^= (p >> 32);
         hVal ^= k;
 

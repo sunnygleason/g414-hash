@@ -23,6 +23,8 @@ import java.math.BigInteger;
  * Utility methods for nifty hash implementations.
  */
 public class LongHashMethods {
+    public static final long LONG_LO_MASK = 0x00000000FFFFFFFFL;
+
     /** rotate a long by the specified number of bits */
     public static final long rotateLong(long val, int bits) {
         return (val >> bits) | (val << (64 - bits));
@@ -136,18 +138,16 @@ public class LongHashMethods {
      * Multiply a 128-bit value by a long. FIXME: need to verify!
      */
     public static final void multiply128_optimized(long a, long b, long[] dest) {
-        long a1 = a >> 32;
-        long a2 = a & 0x00000000FFFFFFFFL;
-        long b1 = b >> 32;
-        long b2 = b & 0x00000000FFFFFFFFL;
-
-        long r1 = a2 * b2;
-        long r2 = a1 * b2;
-        long r3 = a2 * b1;
-        long r4 = a1 * b1;
-
-        dest[1] = r1 + (int) r2 + (int) r3;
-        dest[0] = r4 + (int) (r2 >> 32) + (int) (r3 >> 32);
+        long aH = a >> 32;
+        long aL = a & LONG_LO_MASK;
+        long bH = b >> 32;
+        long bL = b & LONG_LO_MASK;
+        long r1, r2, r3, rML;
+        
+        r1 = aL * bL; r2 = aH * bL; r3 = aL * bH;
+        rML = (r1 >>> 32) + (r2 & LONG_LO_MASK) + (r3 & LONG_LO_MASK);
+        dest[0] = (r1 & LONG_LO_MASK) + ((rML & LONG_LO_MASK) << 32);
+        dest[1] = (aH * bH) + (rML >>> 32);
     }
 
     /**
@@ -158,7 +158,7 @@ public class LongHashMethods {
         BigInteger b1 = BigInteger.valueOf(b);
         BigInteger product = a1.multiply(b1);
 
-        dest[0] = product.shiftRight(64).longValue();
-        dest[1] = product.longValue();
+        dest[0] = product.longValue();
+        dest[1] = product.shiftRight(64).longValue();
     }
 }

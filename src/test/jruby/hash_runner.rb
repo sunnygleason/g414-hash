@@ -13,8 +13,8 @@ OPTS = [
 
 THREAD_PARAMS = [1]
 HASH_PARAMS   = [
-#  "com.g414.hash.impl.JenkinsHash",
-#  "com.g414.hash.impl.Fnv1aHash",
+  "com.g414.hash.impl.JenkinsHash",
+  "com.g414.hash.impl.Fnv1aHash",
   "com.g414.hash.impl.MurmurHash",
   "com.g414.hash.impl.CWowHash",
   "com.g414.hash.impl.Sha1PrngHash"
