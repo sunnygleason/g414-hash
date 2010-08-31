@@ -111,28 +111,52 @@ public class BloomFilter {
     }
 
     /**
-     * Insert an object into the Bloom Filter.
+     * Insert an object into the Bloom Filter. Simply ignores the value of the
+     * putIfAbsent return value.
      * 
      * @param object
      */
     public void put(String object) {
+        this.putIfAbsent(object);
+    }
+
+    /**
+     * Insert an object into the Bloom Filter. Return true if object was
+     * actually inserted, false if not inserted (already existed, possibly by
+     * false positive).
+     * 
+     * @param object
+     */
+    public boolean putIfAbsent(String object) {
+        boolean found = false;
+
         if (this.longHash) {
             long[] hashIndex = hash.getLongHashCodes(object, this.k);
 
             for (long code : hashIndex) {
                 int radix = util.computeRadix(code, BITSET_RADIX_MASK);
-                this.bitSet[radix].set(util.normalizeLong(code,
-                        this.bitSetLength));
+                BitSet bitSet = this.bitSet[radix];
+                int pos = util.normalizeLong(code, this.bitSetLength);
+                if (!bitSet.get(pos)) {
+                    bitSet.set(pos);
+                    found = true;
+                }
             }
         } else {
             int[] hashIndex = hash.getIntHashCodes(object, this.k);
 
             for (int code : hashIndex) {
                 int radix = util.computeRadix(code, BITSET_RADIX_MASK);
-                this.bitSet[radix].set(util.normalizeInt(code,
-                        this.bitSetLength));
+                BitSet bitSet = this.bitSet[radix];
+                int pos = util.normalizeInt(code, this.bitSetLength);
+                if (!bitSet.get(pos)) {
+                    bitSet.set(pos);
+                    found = true;
+                }
             }
         }
+
+        return found;
     }
 
     /**
