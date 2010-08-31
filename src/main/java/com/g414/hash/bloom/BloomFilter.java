@@ -128,7 +128,7 @@ public class BloomFilter {
      * @param object
      */
     public boolean putIfAbsent(String object) {
-        boolean found = false;
+        boolean newlyInserted = false;
 
         if (this.longHash) {
             long[] hashIndex = hash.getLongHashCodes(object, this.k);
@@ -139,7 +139,7 @@ public class BloomFilter {
                 int pos = util.normalizeLong(code, this.bitSetLength);
                 if (!bitSet.get(pos)) {
                     bitSet.set(pos);
-                    found = true;
+                    newlyInserted = true;
                 }
             }
         } else {
@@ -151,12 +151,12 @@ public class BloomFilter {
                 int pos = util.normalizeInt(code, this.bitSetLength);
                 if (!bitSet.get(pos)) {
                     bitSet.set(pos);
-                    found = true;
+                    newlyInserted = true;
                 }
             }
         }
 
-        return found;
+        return newlyInserted;
     }
 
     /**
