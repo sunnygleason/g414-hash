@@ -15,23 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.g414.hash.file.impl;
+package com.g414.hash.file2.impl;
+
+import java.nio.ByteBuffer;
 
 import com.g414.hash.impl.MurmurHash;
 
 /**
  * Encapsulates calculations related to HashFiles.
  */
-public class Calculations {
-    /** HashFile magic value */
-    public static final String MAGIC = "HaSH";
-
-    /** File format version identifier */
-    public static final int VERSION = 0x01000000;
-
-    /** Size of a hash pointer (long hashcode plus long location) */
-    public static final int LONG_POINTER_SIZE = 8 + 8;
-
+public class Calculations2 {
     /** Number of radix files */
     public static final int RADIX_FILE_COUNT_POWER_OF_2 = 8;
 
@@ -41,9 +34,22 @@ public class Calculations {
     /** our trusty hash function */
     private static final MurmurHash hash = new MurmurHash();
 
-    /** Computes the long hash value of a given byte[] key */
-    public static long computeLongHash(byte[] key) {
-        return hash.computeMurmurLongHash(key, 0L);
+    /** computes the size of an entry in the bucket table */
+    public static int getBucketTableEntrySize(boolean isLargeCapacity,
+            boolean isLargeFile) {
+        return (isLargeCapacity ? 8 : 4) + (isLargeFile ? 8 : 4);
+    }
+
+    /** computes the size of an entry in the hash table */
+    public static int getHashTableEntrySize(boolean isLongHash,
+            boolean isLargeFile) {
+        return (isLongHash ? 8 : 4) + (isLargeFile ? 8 : 4);
+    }
+
+    /** computes the hash of a given key */
+    public static long computeHash(byte[] key, boolean longHash) {
+        return longHash ? hash.computeMurmurLongHash(key, 0L) : hash
+                .computeMurmurIntHash(key, 0);
     }
 
     /**
@@ -86,9 +92,52 @@ public class Calculations {
         return (int) (getBucket(hashValue, buckets) >> (buckets - 8));
     }
 
-    /** returns the bucket table offset in the header */
-    public static int getBucketTableOffset() {
-        /* HEADER: MAGIC, VERSION, COUNT, BUCKET_POWER */
-        return MAGIC.length() + 8 + 8 + 4;
+    /**
+     * Computes the bucket position offsets (position-based, not index).
+     */
+    public static ByteBuffer getBucketPositionTable(long[] bucketOffsets,
+            long[] bucketSizes, long dataSegmentEndPosition,
+            boolean isLongHash, boolean isLargeFile, boolean isLargeCapacity) {
+        int buckets = bucketOffsets.length;
+        ByteBuffer slotTableBytes = ByteBuffer.allocate(buckets
+                * (isLargeCapacity ? 16 : 8));
+
+        int longPointerSize = getHashTableEntrySize(isLongHash, isLargeFile);
+
+        for (int i = 0; i < bucketOffsets.length; i++) {
+            long tableSize = bucketSizes[i];
+            long tableOffset = bucketOffsets[i];
+
+            long tablePos = dataSegmentEndPosition
+                    + (tableOffset * longPointerSize);
+
+            if (isLargeCapacity) {
+                slotTableBytes.putLong(tablePos >> 2);
+                slotTableBytes.putLong(tableSize);
+            } else {
+                slotTableBytes.putInt((int) (tablePos >> 2));
+                slotTableBytes.putInt((int) tableSize);
+            }
+
+        }
+
+        slotTableBytes.rewind();
+
+        return slotTableBytes;
+    }
+
+    /**
+     * Computes the offsets (index, not byte position) of the buckets.
+     */
+    public static long[] computeBucketOffsets(long[] bucketCounts) {
+        long[] bucketOffsets = new long[bucketCounts.length];
+
+        int curEntry = 0;
+        for (int i = 0; i < bucketCounts.length; i++) {
+            bucketOffsets[i] = curEntry;
+            curEntry += bucketCounts[i];
+        }
+
+        return bucketOffsets;
     }
 }
