@@ -54,6 +54,8 @@ public class FileOperations2 {
     /** total number of buckets */
     private final int buckets;
 
+    private final int alignment = 2;
+
     private final ByteSize keySize;
 
     private final ByteSize valueSize;
@@ -113,7 +115,7 @@ public class FileOperations2 {
         writeHashTable(radixFilePrefix, bucketOffsets, bucketCounts,
                 dataFileRandomAccess);
 
-        ByteBuffer slotTable = Calculations2.getBucketPositionTable(
+        ByteBuffer slotTable = Calculations2.getBucketPositionTable(alignment,
                 bucketOffsets, bucketCounts, pos, header.isLongHash(), header
                         .isLargeFile(), header.isLargeCapacity());
 
@@ -148,7 +150,7 @@ public class FileOperations2 {
 
         write(hashCodeList[radix],
                 isLargeFile ? ByteSize.EIGHT : ByteSize.FOUR,
-                dataFilePosition >> 2);
+                dataFilePosition >> alignment);
 
         bucketCounts[bucket]++;
     }
@@ -284,7 +286,7 @@ public class FileOperations2 {
 
                 long probedPosition = (isLargeFile ? tableBytes
                         .getLong(probeSlot + off2) : tableBytes
-                        .getInt(probeSlot + off2)) << 2;
+                        .getInt(probeSlot + off2)) << alignment;
 
                 if (probedPosition == 0) {
                     return null;
@@ -365,16 +367,16 @@ public class FileOperations2 {
                     "get() not allowed when HashFile is closed()");
         }
 
-        return Iterators2.getMultiIterable(hashFile, hashTableOffsets,
-                bucketPower, slotSize, keySize, valueSize, isAssociative,
-                isLongHash, isLargeCapacity, isLargeFile, key);
+        return Iterators2.getMultiIterable(alignment, hashFile,
+                hashTableOffsets, bucketPower, slotSize, keySize, valueSize,
+                isAssociative, isLongHash, isLargeCapacity, isLargeFile, key);
     }
 
     private long getHashTablePosition(ByteBuffer bucketData, int slotIndex) {
         int offset = slotIndex * slotSize;
 
         return (isLargeFile ? bucketData.getLong(offset) : bucketData
-                .getInt(offset)) << 2;
+                .getInt(offset)) << alignment;
     }
 
     public long getHashTableSize(ByteBuffer bucketData, int slotIndex) {

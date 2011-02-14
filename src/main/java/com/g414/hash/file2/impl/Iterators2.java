@@ -125,7 +125,7 @@ public class Iterators2 {
         };
     }
 
-    public static Iterable<byte[]> getMultiIterable(
+    public static Iterable<byte[]> getMultiIterable(final int alignment,
             final RandomAccessFile hashFile, final ByteBuffer hashTableOffsets,
             int bucketPower, final int slotSize, final ByteSize keySize,
             final ByteSize valueSize, final boolean isAssociative,
@@ -137,7 +137,7 @@ public class Iterators2 {
 
         final long currentHashTableBasePosition = (isLargeCapacity ? hashTableOffsets
                 .getLong(slotOffset)
-                : hashTableOffsets.getInt(slotOffset)) << 2;
+                : hashTableOffsets.getInt(slotOffset)) << alignment;
 
         int off = isLargeCapacity ? 8 : 4;
 
@@ -184,7 +184,7 @@ public class Iterators2 {
 
                                 long probedPosition = (isLargeFile ? tableBytes
                                         .getLong(probeSlot + off2) : tableBytes
-                                        .getInt(probeSlot + off2)) << 2;
+                                        .getInt(probeSlot + off2)) << alignment;
 
                                 currentFindOperationIndex += 1;
                                 probe += 1;

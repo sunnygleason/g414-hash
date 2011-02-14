@@ -95,9 +95,10 @@ public class Calculations2 {
     /**
      * Computes the bucket position offsets (position-based, not index).
      */
-    public static ByteBuffer getBucketPositionTable(long[] bucketOffsets,
-            long[] bucketSizes, long dataSegmentEndPosition,
-            boolean isLongHash, boolean isLargeFile, boolean isLargeCapacity) {
+    public static ByteBuffer getBucketPositionTable(int alignment,
+            long[] bucketOffsets, long[] bucketSizes,
+            long dataSegmentEndPosition, boolean isLongHash,
+            boolean isLargeFile, boolean isLargeCapacity) {
         int buckets = bucketOffsets.length;
         ByteBuffer slotTableBytes = ByteBuffer.allocate(buckets
                 * (isLargeCapacity ? 16 : 8));
@@ -112,10 +113,10 @@ public class Calculations2 {
                     + (tableOffset * longPointerSize);
 
             if (isLargeCapacity) {
-                slotTableBytes.putLong(tablePos >> 2);
+                slotTableBytes.putLong(tablePos >> alignment);
                 slotTableBytes.putLong(tableSize);
             } else {
-                slotTableBytes.putInt((int) (tablePos >> 2));
+                slotTableBytes.putInt((int) (tablePos >> alignment));
                 slotTableBytes.putInt((int) tableSize);
             }
 
