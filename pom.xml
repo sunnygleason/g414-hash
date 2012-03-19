@@ -6,6 +6,11 @@
   <artifactId>g414-hash</artifactId>
   <version>0.7.0</version>
 
+  <scm>
+    <connection>scm:git:git@github.com:sunnygleason/g414-hash.git</connection>
+    <developerConnection>scm:git:git@github.com:sunnygleason/g414-hash.git</developerConnection>
+  </scm>
+
   <dependencies>
     <dependency>
       <groupId>org.testng</groupId>
