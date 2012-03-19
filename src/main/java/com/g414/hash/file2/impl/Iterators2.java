@@ -163,6 +163,7 @@ public class Iterators2 {
             public Iterator<byte[]> iterator() {
                 return new Iterator<byte[]>() {
                     int probe = initialProbe;
+                    boolean wrapped = false;
 
                     byte[] next = advance();
 
@@ -190,7 +191,12 @@ public class Iterators2 {
                                 probe += 1;
 
                                 if (probe >= currentHashTableSize) {
-                                    probe = 0;
+                                    if (!wrapped) {
+                                        probe = 0;
+                                        wrapped = true;
+                                    } else {
+                                        return null;
+                                    }
                                 }
 
                                 if (probedPosition == 0) {
