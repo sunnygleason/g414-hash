@@ -2,6 +2,11 @@
 THANKS.txt : taking a moment to be grateful...
 ================================================================
 
+: 2012/03/19 :
+
+  - Big thanks to stevenschlansker@ for submitting a bug in the
+    HashFile2 multiIterator code. We appreciate it!
+
 : 2010/05/01 :
 
   - Big thanks to Tatu Saloranta for performance enhancements to the Jenkins and
