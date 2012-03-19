@@ -5,12 +5,8 @@ import java.util.Iterator;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.g414.hash.impl.MurmurHash;
-
 @Test
 public class TestHashFile2EdgeCases {
-    MurmurHash hash = new MurmurHash();
-
     public void testSingleEntryMultiGet() throws Exception {
         File tmp = File.createTempFile("hhhhhh", "ff");
         tmp.deleteOnExit();
