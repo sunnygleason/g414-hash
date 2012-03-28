@@ -15,9 +15,10 @@ import com.g414.hash.file.basetest.HashFileGeneric.Storage;
 
 @Test
 public class RigorousHashFileTest extends RigorousHashFileTestBase<HashEntry> {
+    @Test(groups = "slow")
     public void testHashFileRigorously() throws Exception {
         long[] testCases = { 0L, 1L, 17L, 128L, 256L, 1024L, 1024L * 1024L,
-                10L * 1024L * 1024L, /* 100L * 1024L * 1024L */};
+                10L * 1024L * 1024L, 50L * 1024L * 1024L };
 
         boolean[] trueFalse = { false, true };
 

@@ -20,6 +20,7 @@ public class RigorousHashFile2Test extends RigorousHashFileTestBase<HashEntry> {
     boolean isLargeCapacity = true;
     boolean isLargeFile = true;
 
+    @Test(groups = "slow")
     public void testHashFileRigorously() throws Exception {
         long[] testCases = { 0L, 1L, 7L, 101L, 128L, 255L, 256L, 264L, 1011L,
                 1024L, 512L * 1024L, 1024 * 1024L, 10 * 1024L * 1024L,
