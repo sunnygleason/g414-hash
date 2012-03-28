@@ -366,7 +366,7 @@ public class HashFile {
 
                     String magic = new String(inMagic);
                     if (!Calculations.MAGIC.equals(magic)
-                            && version != Calculations.VERSION) {
+                            || version != Calculations.VERSION) {
                         throw new IOException(
                                 "Incompatible HashFile file version");
                     }
