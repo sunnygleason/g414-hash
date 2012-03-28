@@ -523,7 +523,7 @@ public class FileOperations2 {
     private static long advanceBytes(long pos, long count, boolean isLongPos)
             throws IOException {
         long newpos = pos + count;
-        if (newpos < count || newpos > Integer.MAX_VALUE)
+        if (newpos < count || (!isLongPos && newpos > Integer.MAX_VALUE))
             throw new IOException("HashFile is too big.");
         return newpos;
     }
