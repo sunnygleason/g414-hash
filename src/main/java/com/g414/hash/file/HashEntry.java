@@ -44,4 +44,9 @@ public final class HashEntry {
     public byte[] getValue() {
         return this.value;
     }
+
+    /** returns pair representation */
+    public byte[][] asPair() {
+        return new byte[][] { this.key, this.value };
+    }
 }
