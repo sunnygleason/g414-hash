@@ -17,10 +17,7 @@ public abstract class RigorousHashFileTestBase<T> {
 
     public void performTest(final boolean longHash, final long entries)
             throws Exception {
-        File tmp1 = File.createTempFile("hhhhhh", "ff");
-        final File tmp = new File("/tmp", tmp1.getName());
-
-        tmp1.deleteOnExit();
+        final File tmp = File.createTempFile("hhhhhh", "ff");
         tmp.deleteOnExit();
 
         System.out.println(tmp.getAbsolutePath());
@@ -36,6 +33,8 @@ public abstract class RigorousHashFileTestBase<T> {
         HashFileGeneric.Storage<T> hashFile = getStorage(tmp);
 
         verifyElements(hashFile, entries, 0L, "key", "data");
+
+        tmp.delete();
     }
 
     private void writeElements(HashFileGeneric.Builder hf, long numElements,
@@ -73,6 +72,7 @@ public abstract class RigorousHashFileTestBase<T> {
             Assert.assertEquals(actual1, expect1);
             Assert.assertEquals(actual2, expect2);
             Assert.assertEquals(actual3, expect3);
+
             reportStatus("verified ", i, " records");
         }
         reportStatus("verified ", numElements, " records", true);

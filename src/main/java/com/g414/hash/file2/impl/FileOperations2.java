@@ -64,6 +64,12 @@ public class FileOperations2 {
 
     private final boolean isAssociative;
 
+    private final int hashSizeBytes;
+
+    private final int positionSizeBytes;
+
+    private final int bucketCountSizeBytes;
+
     private final Header2 header;
 
     protected FileOperations2(Header2 header, int bucketPower, int buckets,
@@ -78,6 +84,10 @@ public class FileOperations2 {
         this.isLongHash = isLongHash;
         this.isLargeCapacity = isLargeCapacity;
         this.isLargeFile = isLargeFile;
+
+        this.hashSizeBytes = isLongHash ? 8 : 4;
+        this.positionSizeBytes = isLargeFile ? 8 : 4;
+        this.bucketCountSizeBytes = isLargeCapacity ? 8 : 4;
 
         this.slotSize = Calculations2.getBucketTableEntrySize(isLargeCapacity,
                 isLargeFile);
@@ -195,7 +205,7 @@ public class FileOperations2 {
     public long getEndOfData(RandomAccessFile in) throws IOException {
         in.seek(Header2.getBucketTableOffset());
 
-        return read(in, isLargeFile ? ByteSize.EIGHT : ByteSize.FOUR) << 2;
+        return read(in, isLargeFile ? ByteSize.EIGHT : ByteSize.FOUR) << alignment;
     }
 
     public HashEntry readHashEntry(final DataInputStream input,
@@ -238,7 +248,6 @@ public class FileOperations2 {
 
     public byte[] getFirst(RandomAccessFile hashFile,
             ByteBuffer hashTableOffsets, byte[] key) {
-        // return getMulti(hashFile, hashTableOffsets, key).iterator().next();
         if (hashFile == null) {
             throw new IllegalStateException(
                     "get() not allowed when HashFile is closed()");
@@ -249,9 +258,9 @@ public class FileOperations2 {
         int slotOffset = slot * slotSize;
 
         long currentHashTableBasePosition = (isLargeCapacity ? hashTableOffsets
-                .getLong(slotOffset) : hashTableOffsets.getInt(slotOffset)) << 2;
+                .getLong(slotOffset) : hashTableOffsets.getInt(slotOffset)) << alignment;
 
-        int off = isLargeCapacity ? 8 : 4;
+        int off = this.bucketCountSizeBytes;
 
         long currentHashTableSize = isLargeCapacity ? hashTableOffsets
                 .getLong(slotOffset + off) : hashTableOffsets.getInt(slotOffset
@@ -269,6 +278,9 @@ public class FileOperations2 {
 
         ByteBuffer fileBytes = ByteBuffer.allocate(RANDOM_READ_BUFFER_LENGTH);
 
+        int longPointerSize = Calculations2.getHashTableEntrySize(isLongHash,
+                isLargeFile);
+
         try {
             synchronized (hashFile) {
                 hashFile.seek(currentHashTableBasePosition);
@@ -279,10 +291,10 @@ public class FileOperations2 {
 
             while (currentFindOperationIndex < currentHashTableSize) {
                 tableBytes.rewind();
-                int probeSlot = probe * slotSize;
+                int probeSlot = probe * longPointerSize;
                 long probedHashCode = isLongHash ? tableBytes
                         .getLong(probeSlot) : tableBytes.getInt(probeSlot);
-                int off2 = isLongHash ? 8 : 4;
+                int off2 = this.hashSizeBytes;
 
                 long probedPosition = (isLargeFile ? tableBytes
                         .getLong(probeSlot + off2) : tableBytes
@@ -380,7 +392,7 @@ public class FileOperations2 {
     }
 
     public long getHashTableSize(ByteBuffer bucketData, int slotIndex) {
-        int offset = (slotIndex * slotSize) + (isLargeFile ? 8 : 4);
+        int offset = (slotIndex * slotSize) + positionSizeBytes;
 
         return isLargeCapacity ? bucketData.getLong(offset) : bucketData
                 .getInt(offset);
@@ -467,34 +479,33 @@ public class FileOperations2 {
                 int slotIndexPos = relativeBucketStartOffset + hashProbe;
 
                 boolean finished = false;
-                while (!finished && bucketCount > 0) {
-                    int probedHashCodeIndex = slotIndexPos * longPointerSize;
-                    int probedPositionIndex = probedHashCodeIndex
-                            + (isLongHash ? 8 : 4);
+                int trials = 0;
+                while (!finished && trials < bucketCount) {
+                    trials += 1;
+                    hashTableBytes.rewind();
 
-                    long probedPosition = isLongHash ? hashTableBytes
+                    int probedHashCodeIndex = (slotIndexPos * longPointerSize);
+                    int probedPositionIndex = probedHashCodeIndex
+                            + hashSizeBytes;
+
+                    long probedPosition = isLargeCapacity ? hashTableBytes
                             .getLong(probedPositionIndex) : hashTableBytes
                             .getInt(probedPositionIndex);
 
                     if (probedPosition == 0) {
-                        hashTableBytes.rewind();
-                        int off = 0;
-
                         if (isLongHash) {
                             hashTableBytes.putLong(probedHashCodeIndex,
                                     hashCode);
-                            off = 8;
                         } else {
                             hashTableBytes.putInt(probedHashCodeIndex,
                                     (int) hashCode);
-                            off = 4;
                         }
 
                         if (isLargeFile) {
-                            hashTableBytes.putLong(probedHashCodeIndex + off,
+                            hashTableBytes.putLong(probedPositionIndex,
                                     position);
                         } else {
-                            hashTableBytes.putInt(probedHashCodeIndex + off,
+                            hashTableBytes.putInt(probedPositionIndex,
                                     (int) position);
                         }
                         finished = true;

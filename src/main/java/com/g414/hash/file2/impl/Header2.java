@@ -17,8 +17,11 @@
  */
 package com.g414.hash.file2.impl;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.g414.hash.file2.ByteSize;
@@ -31,10 +34,7 @@ public class Header2 {
     public static final String MAGIC = "HF*2";
 
     /** File format version identifier */
-    public static final int VERSION = 0x02000000;
-
-    /** expected number of elements, used for computing number of buckets */
-    private final long expectedElements;
+    public static final int VERSION = 0x02020202;
 
     /** the number of buckets */
     private final int buckets;
@@ -66,9 +66,8 @@ public class Header2 {
 
     private volatile boolean isFinished;
 
-    public Header2(long expectedElements, ByteSize keySize, ByteSize valueSize,
+    public Header2(byte bucketPower, ByteSize keySize, ByteSize valueSize,
             boolean isLongHash, boolean isLargeCapacity, boolean isLargeFile) {
-        this.expectedElements = expectedElements;
         this.keySize = keySize;
         this.valueSize = valueSize;
 
@@ -82,7 +81,7 @@ public class Header2 {
         this.isLargeCapacity = isLargeCapacity;
         this.isLargeFile = isLargeFile;
 
-        this.bucketPower = Calculations2.getBucketPower(expectedElements);
+        this.bucketPower = bucketPower;
         this.buckets = 1 << this.bucketPower;
 
         if (this.bucketPower < 8 || this.bucketPower > 28) {
@@ -97,18 +96,6 @@ public class Header2 {
                 + this.bucketTableLength;
 
         this.isFinished = false;
-    }
-
-    protected Header2(boolean finished, long expectedElements, long count,
-            ByteSize keySize, ByteSize valueSize, boolean isLongHash,
-            boolean isLargeCapacity, boolean isLargeFile) {
-        this(expectedElements, keySize, valueSize, isLongHash, isLargeCapacity,
-                isLargeFile);
-        this.elementCount.set(count);
-
-        if (finished) {
-            this.setFinished();
-        }
     }
 
     public int getRadixFileCount() {
@@ -167,10 +154,6 @@ public class Header2 {
         return bucketPower;
     }
 
-    public long getExpectedElements() {
-        return expectedElements;
-    }
-
     public int getSlotSize() {
         return slotSize;
     }
@@ -192,56 +175,86 @@ public class Header2 {
         return MAGIC.length() + 4 + 1 + 1 + 1 + 1 + 1 + 1 + 2 + 8 + 8 + 8;
     }
 
-    public void write(RandomAccessFile file) throws IOException {
-        file.writeBytes(MAGIC);
-        file.writeInt(VERSION);
-        file.writeByte(this.bucketPower);
-        file.writeByte(this.keySize.getSize());
-        file.writeByte(this.valueSize.getSize());
-        file.writeByte(isLongHash ? 8 : 4);
-        file.writeByte(isLargeCapacity ? 8 : 4);
-        file.writeByte(isLargeFile ? 8 : 4);
-        file.writeChar(0);
-        file.writeLong(this.elementCount.get());
-        file.writeLong(0xFFFFFFFFFFFFFFFFL);
-        file.writeLong(0xFFFFFFFFFFFFFFFFL);
+    public void write(ByteBuffer buffer) throws IOException {
+        buffer.put(MAGIC.getBytes());
+        buffer.putInt(VERSION);
+        buffer.put((byte) this.bucketPower);
+        buffer.put((byte) this.keySize.getSize());
+        buffer.put((byte) this.valueSize.getSize());
+        buffer.put((byte) (isLongHash ? 8 : 4));
+        buffer.put((byte) (isLargeCapacity ? 8 : 4));
+        buffer.put((byte) (isLargeFile ? 8 : 4));
+        buffer.putChar((char) 0);
+        buffer.putLong(this.elementCount.get());
+        buffer.putLong(0xFFFFFFFFFFFFFFFFL);
+        buffer.putLong(0xFFFFFFFFFFFFFFFFL);
     }
 
-    public static Header2 readHeader(RandomAccessFile hashFile)
-            throws IOException {
+    public void write(RandomAccessFile file) throws IOException {
+        ByteBuffer outBuffer = ByteBuffer.allocate(getBucketTableOffset());
+        this.write(outBuffer);
+        file.write(outBuffer.array());
+    }
+
+    public void write(DataOutputStream stream) throws IOException {
+        ByteBuffer outBuffer = ByteBuffer.allocate(getBucketTableOffset());
+        this.write(outBuffer);
+        stream.write(outBuffer.array());
+    }
+
+    public static Header2 readHeader(ByteBuffer buffer) throws IOException {
+        if (buffer.capacity() < getBucketTableOffset()) {
+            throw new IllegalArgumentException(
+                    "Buffer too small to contain header!");
+        }
         byte[] inMagic = new byte[MAGIC.length()];
-        hashFile.readFully(inMagic);
-        int version = (int) hashFile.readInt();
+        buffer.get(inMagic);
+        int version = (int) buffer.getInt();
 
         String magic = new String(inMagic);
-        if (!MAGIC.equals(magic) && version != VERSION) {
+        if (!MAGIC.equals(magic) || version != VERSION) {
             throw new IOException("Incompatible HashFile file version");
         }
 
-        int bucketPower = hashFile.readByte();
+        int bucketPower = buffer.get();
 
-        ByteSize keySize = ByteSize.valueOf(hashFile.readByte());
-        ByteSize valueSize = ByteSize.valueOf(hashFile.readByte());
+        ByteSize keySize = ByteSize.valueOf(buffer.get());
+        ByteSize valueSize = ByteSize.valueOf(buffer.get());
 
-        boolean isLongHash = hashFile.readByte() == 8;
-        boolean isLargeCapacity = hashFile.readByte() == 8;
-        boolean isLargeFile = hashFile.readByte() == 8;
-        hashFile.readChar(); // unused
+        boolean isLongHash = buffer.get() == 8;
+        boolean isLargeCapacity = buffer.get() == 8;
+        boolean isLargeFile = buffer.get() == 8;
+        buffer.getChar(); // unused
 
-        long count = hashFile.readLong();
+        long count = buffer.getLong();
 
-        final long marker1 = hashFile.readLong();
-        final long marker2 = hashFile.readLong();
+        final long marker1 = buffer.getLong();
+        final long marker2 = buffer.getLong();
         if (marker1 != -1L || marker2 != -1L) {
             throw new IllegalArgumentException(
                     "Malformed marker block in header: m1=" + marker1 + ", m2="
                             + marker2);
         }
 
-        Header2 header = new Header2(true, 1 << bucketPower, count, keySize,
-                valueSize, isLongHash, isLargeCapacity, isLargeFile);
+        Header2 header = new Header2((byte) bucketPower, keySize, valueSize,
+                isLongHash, isLargeCapacity, isLargeFile);
+        header.elementCount.set(count);
         header.setFinished();
 
         return header;
+    }
+
+    public static Header2 readHeader(RandomAccessFile file) throws IOException {
+        ByteBuffer inBuffer = ByteBuffer.allocate(getBucketTableOffset());
+        file.read(inBuffer.array());
+
+        return readHeader(inBuffer);
+    }
+
+    public static Header2 readHeader(DataInputStream stream) throws IOException {
+        ByteBuffer inBuffer = ByteBuffer.allocate(getBucketTableOffset());
+        stream.read(inBuffer.array());
+
+        return readHeader(inBuffer);
     }
 }

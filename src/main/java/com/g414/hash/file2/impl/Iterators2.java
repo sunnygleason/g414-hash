@@ -86,6 +86,8 @@ public class Iterators2 {
 
                     return new Iterator<HashEntry>() {
                         AtomicLong pos = new AtomicLong(startPos);
+                        AtomicLong remaining = new AtomicLong(header
+                                .getElementCount());
 
                         protected void finalize() {
                             try {
@@ -96,7 +98,7 @@ public class Iterators2 {
 
                         @Override
                         public synchronized boolean hasNext() {
-                            return pos.get() < eod;
+                            return pos.get() < eod && remaining.get() > 0;
                         }
 
                         @Override
@@ -112,6 +114,7 @@ public class Iterators2 {
                                         "next() called past end of iterator");
                             }
 
+                            remaining.decrementAndGet();
                             return fileOps.readHashEntry(input, pos);
                         }
                     };
@@ -151,12 +154,17 @@ public class Iterators2 {
 
         final int initialProbe = (int) (Math.abs(currentHashKey) % currentHashTableSize);
 
-        final ByteBuffer tableBytes = ByteBuffer.allocate(Calculations2
-                .getHashTableEntrySize(isLongHash, isLargeFile)
-                * ((int) currentHashTableSize));
+        int bufferSize = Calculations2.getHashTableEntrySize(isLongHash,
+                isLargeFile)
+                * ((int) currentHashTableSize);
+
+        final ByteBuffer tableBytes = ByteBuffer.allocate(bufferSize);
 
         final ByteBuffer fileBytes = ByteBuffer
                 .allocate(FileOperations2.RANDOM_READ_BUFFER_LENGTH);
+
+        final int longPointerSize = Calculations2.getHashTableEntrySize(
+                isLongHash, isLargeFile);
 
         return new Iterable<byte[]>() {
             @Override
@@ -164,25 +172,32 @@ public class Iterators2 {
                 return new Iterator<byte[]>() {
                     int probe = initialProbe;
                     boolean wrapped = false;
+                    boolean first = true;
 
                     byte[] next = advance();
 
+                    private void readFully() throws IOException {
+                        synchronized (hashFile) {
+                            hashFile.seek(currentHashTableBasePosition);
+                            hashFile.readFully(tableBytes.array());
+                        }
+                    }
+
                     private byte[] advance() {
                         try {
-                            synchronized (hashFile) {
-                                hashFile.seek(currentHashTableBasePosition);
-                                hashFile.readFully(tableBytes.array());
+                            if (first) {
+                                readFully();
+                                first = false;
                             }
 
                             long currentFindOperationIndex = 0;
 
                             while (currentFindOperationIndex < currentHashTableSize) {
-                                int probeSlot = probe * slotSize;
+                                int probeSlot = probe * longPointerSize;
                                 long probedHashCode = isLongHash ? tableBytes
                                         .getLong(probeSlot) : tableBytes
                                         .getInt(probeSlot);
                                 int off2 = isLongHash ? 8 : 4;
-
                                 long probedPosition = (isLargeFile ? tableBytes
                                         .getLong(probeSlot + off2) : tableBytes
                                         .getInt(probeSlot + off2)) << alignment;

@@ -62,7 +62,7 @@ public class Calculations2 {
      */
     public static int getBucketPower(long expectedElements) {
         if (expectedElements <= 0) {
-            return 24;
+            return 8;
         }
 
         int powerOf2 = (64 - Long.numberOfLeadingZeros(expectedElements));

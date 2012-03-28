@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import com.g414.hash.file2.impl.Calculations2;
 import com.g414.hash.file2.impl.FileOperations2;
 import com.g414.hash.file2.impl.Header2;
 
@@ -76,7 +77,8 @@ public final class HashFile2Builder {
             long expectedElements, ByteSize keySize, ByteSize valueSize,
             boolean isLongHash, boolean isLargeCapacity, boolean isLargeFile)
             throws IOException {
-        Header2 header = new Header2(expectedElements, keySize, valueSize,
+        int bucketPower = Calculations2.getBucketPower(expectedElements);
+        Header2 header = new Header2((byte) bucketPower, keySize, valueSize,
                 isLongHash, isLargeCapacity, isLargeFile);
 
         this.fileOps = FileOperations2.fromHeader(header);
