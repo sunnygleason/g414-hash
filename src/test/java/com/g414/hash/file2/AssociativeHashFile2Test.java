@@ -23,34 +23,23 @@ public class AssociativeHashFile2Test extends
 
     @Test(groups = "slow")
     public void testHashFileRigorously() throws Exception {
-        long[] testCases = {
-        // 0L, 1L, 7L, 101L, 128L, 255L, 256L, 264L, 1011L,
-        // 1024L,
-        512L * 1024L
-        // , 1024 * 1024L
-        };
+        long[] testCases = { 0L, 1L, 7L, 101L, 128L, 255L, 256L, 264L, 1011L,
+                1024L, 512L * 1024L, 1024 * 1024L, 10 * 1024 * 1024L };
 
-        boolean[] trueFalse = { false, true };
-
-        for (boolean longHash : trueFalse) {
-            this.isLongHash = longHash;
-
-            for (long entries : testCases) {
-                for (ByteSize size : ByteSize.values()) {
-                    if (size.equals(ByteSize.ZERO)
-                            || size.equals(ByteSize.EIGHT)) {
-                        continue;
-                    }
-
-                    this.keySize = size;
-                    this.valueSize = size;
-
-                    System.out.println("--------------");
-                    System.out.println("Testing hashfile: long? " + longHash
-                            + " : key/value size = " + size + " : entries = "
-                            + entries);
-                    performTest(longHash, entries, true);
+        for (long entries : testCases) {
+            for (ByteSize size : ByteSize.values()) {
+                if (size.equals(ByteSize.ZERO) || size.equals(ByteSize.EIGHT)) {
+                    continue;
                 }
+
+                this.keySize = size;
+                this.valueSize = size;
+
+                System.out.println("--------------");
+                System.out.println("Testing associative hashfile: long? "
+                        + true + " : key/value size = " + size
+                        + " : entries = " + entries);
+                performTest(true, entries, true);
             }
         }
     }
