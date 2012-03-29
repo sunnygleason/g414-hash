@@ -14,7 +14,7 @@ public class HashFileGeneric {
 
         public List<byte[]> getMulti(byte[] key);
 
-        public Iterable<T> elements();
+        public List<T> elements();
 
         public byte[][] asPair(T object);
     }

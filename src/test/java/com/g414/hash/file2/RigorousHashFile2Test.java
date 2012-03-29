@@ -44,7 +44,7 @@ public class RigorousHashFile2Test extends RigorousHashFileTestBase<HashEntry> {
                     System.out.println("Testing hashfile: long? " + longHash
                             + " : key/value size = " + size + " : entries = "
                             + entries);
-                    performTest(longHash, entries);
+                    performTest(longHash, entries, false);
                 }
             }
         }
@@ -117,9 +117,14 @@ public class RigorousHashFile2Test extends RigorousHashFileTestBase<HashEntry> {
             }
 
             @Override
-            public Iterable<HashEntry> elements() {
+            public List<HashEntry> elements() {
                 try {
-                    return HashFile2.elements(tmp.toString());
+                    List<HashEntry> result = new ArrayList<HashEntry>();
+                    for (HashEntry entry : HashFile2.elements(tmp.toString())) {
+                        result.add(entry);
+                    }
+
+                    return result;
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

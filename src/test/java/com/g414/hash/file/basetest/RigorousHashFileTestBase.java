@@ -1,8 +1,10 @@
 package com.g414.hash.file.basetest;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
 
 import org.testng.Assert;
@@ -15,8 +17,8 @@ public abstract class RigorousHashFileTestBase<T> {
 
     public abstract void testHashFileRigorously() throws Exception;
 
-    public void performTest(final boolean longHash, final long entries)
-            throws Exception {
+    public void performTest(final boolean longHash, final long entries,
+            boolean isAssociative) throws Exception {
         final File tmp = File.createTempFile("hhhhhh", "ff");
         tmp.deleteOnExit();
 
@@ -32,7 +34,8 @@ public abstract class RigorousHashFileTestBase<T> {
 
         HashFileGeneric.Storage<T> hashFile = getStorage(tmp);
 
-        verifyElements(hashFile, entries, 0L, "key", "data");
+        verifyElements(longHash, hashFile, entries, 0L, "key", "data",
+                isAssociative);
 
         tmp.delete();
     }
@@ -51,27 +54,40 @@ public abstract class RigorousHashFileTestBase<T> {
         reportStatus("wrote ", numElements, " records", true);
     }
 
-    private void verifyElements(HashFileGeneric.Storage<T> hf,
-            long numElements, long seed, String keyPre, String valPre)
+    private void verifyElements(boolean longHash,
+            HashFileGeneric.Storage<T> hf, long numElements, long seed,
+            String keyPre, String valPre, boolean isAssociative)
             throws Exception {
         Random rand = new Random(seed);
+
         for (long i = 0; i < numElements; i++) {
             byte[] keyBytes = (keyPre + rand.nextLong()).getBytes();
             byte[] expect1 = (valPre + rand.nextLong()).getBytes();
             byte[] expect2 = (valPre + rand.nextLong()).getBytes();
             byte[] expect3 = (valPre + rand.nextLong()).getBytes();
 
-            byte[] theValue = hf.get(keyBytes);
-            Assert.assertEquals(theValue, expect1);
+            if (!isAssociative) {
+                byte[] theValue = hf.get(keyBytes);
+                Assert.assertEquals(theValue, expect1);
+            }
 
-            Iterator<byte[]> iter = hf.getMulti(keyBytes).iterator();
-            byte[] actual1 = iter.next();
-            byte[] actual2 = iter.next();
-            byte[] actual3 = iter.next();
+            List<byte[]> list = hf.getMulti(keyBytes);
 
-            Assert.assertEquals(actual1, expect1);
-            Assert.assertEquals(actual2, expect2);
-            Assert.assertEquals(actual3, expect3);
+            if (!isAssociative) {
+                Assert.assertEquals(list.size(), 3);
+                byte[] actual1 = list.get(0);
+                byte[] actual2 = list.get(1);
+                byte[] actual3 = list.get(2);
+
+                Assert.assertEquals(actual1, expect1);
+                Assert.assertEquals(actual2, expect2);
+                Assert.assertEquals(actual3, expect3);
+            } else {
+                Assert.assertTrue(list.size() >= 3);
+                assertContains(list, expect1);
+                assertContains(list, expect2);
+                assertContains(list, expect3);
+            }
 
             reportStatus("verified ", i, " records");
         }
@@ -81,6 +97,8 @@ public abstract class RigorousHashFileTestBase<T> {
         Iterator<T> iter2 = hf.elements().iterator();
 
         int count = 0;
+
+        byte[] emptyBytes = new byte[0];
 
         while (iter2.hasNext()) {
             byte[][] e1 = hf.asPair(iter2.next());
@@ -96,13 +114,18 @@ public abstract class RigorousHashFileTestBase<T> {
             byte[] actual2 = e2[1];
             byte[] actual3 = e3[1];
 
-            Assert.assertEquals(e1[0], keyBytes);
+            if (!isAssociative) {
+                Assert.assertEquals(e1[0], keyBytes);
+                Assert.assertEquals(e2[0], keyBytes);
+                Assert.assertEquals(e3[0], keyBytes);
+            } else {
+                Assert.assertEquals(e1[0], emptyBytes);
+                Assert.assertEquals(e2[0], emptyBytes);
+                Assert.assertEquals(e3[0], emptyBytes);
+            }
+
             Assert.assertEquals(actual1, expect1);
-
-            Assert.assertEquals(e2[0], keyBytes);
             Assert.assertEquals(actual2, expect2);
-
-            Assert.assertEquals(e3[0], keyBytes);
             Assert.assertEquals(actual3, expect3);
 
             count += 1;
@@ -121,5 +144,15 @@ public abstract class RigorousHashFileTestBase<T> {
         if (force || (i % 100000 == 0)) {
             System.out.println(new Date() + " " + prefix + i + suffix);
         }
+    }
+
+    private static void assertContains(List<byte[]> list, byte[] target) {
+        for (byte[] entry : list) {
+            if (Arrays.equals(entry, target)) {
+                return;
+            }
+        }
+
+        Assert.assertTrue(false, "target element not found");
     }
 }

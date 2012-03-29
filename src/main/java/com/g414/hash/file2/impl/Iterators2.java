@@ -231,7 +231,7 @@ public class Iterators2 {
                                         .read(fileBytes, keySize, 0)
                                         : 0;
 
-                                if (keyLength != key.length) {
+                                if (!isAssociative && keyLength != key.length) {
                                     continue;
                                 }
 

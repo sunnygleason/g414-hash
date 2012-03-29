@@ -189,9 +189,13 @@ public class FileOperations2 {
         int paddingSize = isAssociative ? writePadding(dataFile, valueSize,
                 value) : writePadding(dataFile, keySize, valueSize, key, value);
 
-        return advanceBytes(pos, (long) keySize.getSize()
-                + (long) valueSize.getSize() + (long) key.length
-                + (long) value.length + (long) paddingSize, isLargeFile);
+        long bytesWritten = (long) valueSize.getSize() + (long) value.length
+                + (long) paddingSize;
+        if (!isAssociative) {
+            bytesWritten += (long) keySize.getSize() + (long) key.length;
+        }
+
+        return advanceBytes(pos, bytesWritten, isLargeFile);
     }
 
     public void readBucketEntries(ByteBuffer hashTableOffsets) {
@@ -251,6 +255,11 @@ public class FileOperations2 {
         if (hashFile == null) {
             throw new IllegalStateException(
                     "get() not allowed when HashFile is closed()");
+        }
+
+        if (isAssociative) {
+            throw new UnsupportedOperationException(
+                    "get() not allowed for associative hash files, use getMulti() instead");
         }
 
         long currentHashKey = Calculations2.computeHash(key, isLongHash);

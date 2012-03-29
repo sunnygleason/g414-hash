@@ -77,6 +77,11 @@ public final class HashFile2Builder {
             long expectedElements, ByteSize keySize, ByteSize valueSize,
             boolean isLongHash, boolean isLargeCapacity, boolean isLargeFile)
             throws IOException {
+        if (isAssociative && !isLongHash) {
+            throw new IllegalArgumentException(
+                    "Associative HashFiles must use long hash to reduce collisions!");
+        }
+
         int bucketPower = Calculations2.getBucketPower(expectedElements);
         Header2 header = new Header2((byte) bucketPower, keySize, valueSize,
                 isLongHash, isLargeCapacity, isLargeFile);
