@@ -193,6 +193,10 @@ public class Iterators2 {
                             long currentFindOperationIndex = 0;
 
                             while (currentFindOperationIndex < currentHashTableSize) {
+                                if (wrapped && probe >= initialProbe) {
+                                    return null;
+                                }
+
                                 int probeSlot = probe * longPointerSize;
                                 long probedHashCode = isLongHash ? tableBytes
                                         .getLong(probeSlot) : tableBytes
