@@ -128,6 +128,23 @@ public final class HashFile2Builder {
     }
 
     /**
+     * Bulk-adds HashEntry instances from one hash file to another. In the
+     * future, this operation may be optimized by concatenating data segments
+     * and hash table segments. (Hash codes stay the same, offsets would just
+     * need to be incremented by the existing data size)
+     * 
+     * @param entries
+     *            Iterable<HashEntry> entries to add
+     * @exception java.io.IOException
+     *                If an error occurs adding the entries to the HashFile.
+     */
+    public void addAll(Iterable<HashEntry> entries) throws IOException {
+        for (HashEntry entry : entries) {
+            add(entry.getKey(), entry.getValue());
+        }
+    }
+
+    /**
      * Finishes building the HashFile.
      */
     public synchronized void finish() throws IOException {

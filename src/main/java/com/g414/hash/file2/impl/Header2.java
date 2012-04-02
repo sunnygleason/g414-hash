@@ -98,6 +98,11 @@ public class Header2 {
         this.isFinished = false;
     }
 
+    public int getHashTableEntrySize() {
+        return Calculations2.getHashTableEntrySize(this.isLongHash,
+                this.isLargeFile);
+    }
+
     public int getRadixFileCount() {
         return Calculations2.RADIX_FILE_COUNT;
     }
@@ -164,6 +169,10 @@ public class Header2 {
 
     public long getTotalHeaderLength() {
         return totalHeaderLength;
+    }
+
+    public long getTotalHashTableLength() {
+        return (long) this.getHashTableEntrySize() * this.getElementCount();
     }
 
     /** returns the bucket table offset in the header */
