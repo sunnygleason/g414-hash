@@ -223,7 +223,7 @@ public class HashFile {
                     fileBytes.get(data);
                 } else {
                     synchronized (hashFile) {
-                        hashFile.seek(probedPosition);
+                        hashFile.seek(probedPosition + 8);
                         hashFile.readFully(probedKey);
 
                         if (!Arrays.equals(key, probedKey)) {
